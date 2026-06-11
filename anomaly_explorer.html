@@ -1,0 +1,1836 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Wyscout Anomaly Explorer</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0f1117;--bg2:#141820;--bg3:#1a1f2e;--bg4:#0d1117;--border:#1f2937;--border2:#2d3748;--text:#e2e8f0;--muted:#718096;--faint:#4a5568;--blue:#63b3ed;--green:#68d391;--red:#fc8181;--yellow:#f6e05e;--purple:#b794f4;--orange:#fbd38d;--cyan:#76e4f7;--pink:#f687b3}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+/* ── Header ── */
+header{background:linear-gradient(135deg,#1a1f2e,#16213e);border-bottom:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:50}
+header h1{font-size:1.15rem;font-weight:700;color:#fff}
+.hbadge{background:var(--bg3);color:var(--blue);border-radius:20px;padding:3px 10px;font-size:.7rem;font-weight:600}
+#headerInfo{margin-left:auto;font-size:.76rem;color:var(--faint)}
+#shortlistBtn{background:var(--bg3);border:1px solid var(--border2);color:var(--yellow);border-radius:8px;padding:5px 12px;font-size:.76rem;cursor:pointer;transition:.2s}
+#shortlistBtn:hover{border-color:var(--yellow)}
+/* Export dropdown */
+.export-wrap{position:relative}
+.export-wrap .export-menu{display:none;position:absolute;right:0;top:calc(100% + 6px);background:var(--bg2);border:1px solid var(--border2);border-radius:9px;min-width:230px;z-index:200;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,.5)}
+.export-wrap:focus-within .export-menu,.export-wrap.open .export-menu{display:block}
+.export-menu-head{padding:8px 14px;font-size:.68rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;background:var(--bg3);border-bottom:1px solid var(--border)}
+.export-item{display:flex;align-items:center;gap:10px;padding:9px 14px;cursor:pointer;transition:background .15s;border-bottom:1px solid var(--border)}
+.export-item:last-child{border-bottom:none}
+.export-item:hover{background:var(--bg3)}
+.export-item .ei-icon{font-size:1rem;width:20px;text-align:center}
+.export-item .ei-label{font-size:.8rem;font-weight:600;color:var(--text)}
+.export-item .ei-desc{font-size:.69rem;color:var(--muted);margin-top:1px}
+.export-col-picker{padding:10px 14px;border-top:1px solid var(--border)}
+.export-col-picker label{font-size:.68rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:6px}
+.export-col-list{display:flex;flex-wrap:wrap;gap:5px;max-height:100px;overflow-y:auto}
+.ecol-chip{background:var(--bg3);border:1px solid var(--border2);border-radius:20px;padding:2px 8px;font-size:.68rem;cursor:pointer;color:var(--muted);transition:.15s;white-space:nowrap}
+.ecol-chip.on{background:#1a365d;border-color:var(--blue);color:var(--blue)}
+
+/* ── Layout ── */
+.app{display:grid;grid-template-columns:280px 1fr;min-height:calc(100vh - 53px)}
+.sidebar{background:var(--bg4);border-right:1px solid var(--border);padding:16px;overflow-y:auto;display:flex;flex-direction:column;gap:14px}
+.main{padding:20px;overflow-y:auto;display:flex;flex-direction:column;gap:16px}
+
+/* ── Sidebar ── */
+.scard{background:var(--bg2);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.scard-head{padding:8px 12px;font-size:.68rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;background:var(--bg3);display:flex;align-items:center;gap:6px}
+.scard-body{padding:12px}
+.ctrl-row{margin-bottom:10px}
+.ctrl-row:last-child{margin-bottom:0}
+.ctrl-row label{display:block;font-size:.68rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
+select,input[type=number],input[type=text]{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;color:var(--text);padding:6px 9px;font-size:.8rem;outline:none;appearance:none;transition:border-color .2s}
+select:focus,input:focus{border-color:var(--blue)}
+select option{background:var(--bg3)}
+.btn{background:#3182ce;color:#fff;border:none;border-radius:7px;padding:8px 14px;font-size:.8rem;font-weight:600;cursor:pointer;transition:.2s;width:100%;text-align:center;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.btn:hover{background:#2b6cb0}
+.btn:disabled{background:var(--border2);color:var(--faint);cursor:not-allowed}
+.btn-sm{padding:5px 11px;font-size:.74rem;width:auto}
+.btn-xs{padding:3px 8px;font-size:.7rem;width:auto}
+.btn-ghost{background:transparent;border:1px solid var(--border2);color:var(--muted)}
+.btn-ghost:hover{border-color:var(--blue);color:var(--blue);background:transparent}
+.btn-green{background:#276749}.btn-green:hover{background:#22543d}
+.btn-red{background:#9b2c2c}.btn-red:hover{background:#742a2a}
+.btn-yellow{background:#744210;color:var(--yellow)}.btn-yellow:hover{background:#5f370e}
+
+/* Presets */
+.presets{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+.preset-chip{background:var(--bg3);border:1px solid var(--border2);color:var(--muted);border-radius:20px;padding:3px 9px;font-size:.7rem;cursor:pointer;transition:.15s;white-space:nowrap}
+.preset-chip:hover{border-color:var(--blue);color:var(--blue)}
+.preset-chip.active{background:#1a365d;border-color:var(--blue);color:var(--blue)}
+
+/* File list */
+.file-list{display:flex;flex-direction:column;gap:5px;margin-top:8px}
+.file-item{display:flex;align-items:center;gap:7px;background:var(--bg3);border-radius:6px;padding:5px 9px;font-size:.73rem}
+.fi-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.fi-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#a0aec0}
+.fi-n{color:var(--faint);font-size:.68rem}
+.fi-rm{background:none;border:none;color:var(--faint);cursor:pointer;font-size:.85rem;padding:0 2px}
+.fi-rm:hover{color:var(--red)}
+
+/* Upload */
+.upload-zone{border:2px dashed var(--border2);border-radius:8px;padding:16px;text-align:center;cursor:pointer;transition:.2s;background:var(--bg)}
+.upload-zone:hover,.upload-zone.drag-over{border-color:var(--blue);background:#131d2e}
+.upload-zone input{display:none}
+.upload-zone p{font-size:.74rem;color:var(--faint);margin-top:5px}
+
+/* ── Tabs ── */
+.tabs{display:flex;gap:3px;background:var(--bg3);border-radius:9px;padding:3px;flex-wrap:wrap}
+.tab{flex:none;padding:6px 13px;border:none;border-radius:6px;font-size:.76rem;font-weight:600;cursor:pointer;color:var(--muted);background:transparent;transition:.15s;white-space:nowrap}
+.tab:hover{color:var(--text)}
+.tab.active{background:var(--border2);color:var(--text)}
+.tab-panel{display:none;flex-direction:column;gap:16px}
+.tab-panel.active{display:flex}
+
+/* ── Stats bar ── */
+.stats-bar{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px}
+.scard2{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px 14px}
+.scard2 .sv{font-size:1.5rem;font-weight:700}
+.scard2 .sl{font-size:.68rem;color:var(--muted);margin-top:2px}
+
+/* ── Panel ── */
+.panel{background:var(--bg2);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.panel-head{padding:11px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.panel-head h3{font-size:.8rem;font-weight:600;color:#a0aec0}
+.panel-body{padding:16px}
+.panel-body.nopad{padding:0}
+
+/* ── Table ── */
+.tscroll{overflow-x:auto;max-height:420px;overflow-y:auto}
+table{width:100%;border-collapse:collapse;font-size:.78rem}
+thead th{background:var(--bg3);color:var(--muted);font-weight:600;text-align:left;padding:8px 12px;white-space:nowrap;position:sticky;top:0;cursor:pointer;user-select:none;border-bottom:1px solid var(--border2);z-index:1}
+thead th:hover{color:#a0aec0}
+thead th.asc::after{content:' ↑';color:var(--blue)}
+thead th.desc::after{content:' ↓';color:var(--blue)}
+tbody tr{border-bottom:1px solid var(--bg);cursor:pointer;transition:background .1s}
+tbody tr:hover{background:#1a2236}
+tbody tr.sel{background:#1e2d45!important}
+tbody td{padding:7px 12px;white-space:nowrap}
+.tp{color:var(--text);font-weight:600;max-width:150px;overflow:hidden;text-overflow:ellipsis}
+.tt{color:var(--muted);max-width:120px;overflow:hidden;text-overflow:ellipsis}
+.tpos{color:var(--purple);font-size:.7rem;font-weight:600}
+.tnum{text-align:right;font-variant-numeric:tabular-nums}
+
+/* z chips */
+.zc{display:inline-block;border-radius:4px;padding:2px 6px;font-size:.7rem;font-weight:700;min-width:50px;text-align:center}
+.zc-ehi{background:#c53030;color:#fff}.zc-hi{background:#9b2c2c44;color:var(--red)}
+.zc-elo{background:#1a365d;color:var(--blue)}.zc-lo{background:#1a365d44;color:#90cdf4}
+.zc-n{background:var(--border2);color:var(--faint)}
+.tat-hi{background:#742a2a;color:#feb2b2;border-radius:4px;padding:2px 7px;font-size:.67rem;font-weight:700;text-transform:uppercase}
+.tat-lo{background:#1a365d;color:#bee3f8;border-radius:4px;padding:2px 7px;font-size:.67rem;font-weight:700;text-transform:uppercase}
+
+/* Percentile bar */
+.pb{display:flex;align-items:center;gap:5px;min-width:90px}
+.pb-bg{flex:1;height:4px;background:var(--border2);border-radius:2px;overflow:hidden}
+.pb-fill{height:100%;border-radius:2px}
+.pb-lbl{font-size:.68rem;min-width:24px;text-align:right;font-variant-numeric:tabular-nums}
+
+/* Star */
+.star-btn{background:none;border:none;cursor:pointer;font-size:.95rem;padding:0 2px;color:var(--faint);transition:.15s}
+.star-btn:hover{color:var(--yellow)}
+.star-btn.starred{color:var(--yellow)}
+
+/* ── Drawer ── */
+.drawer-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:200}
+.drawer-overlay.open{display:block}
+.drawer{position:fixed;right:0;top:0;bottom:0;width:460px;background:var(--bg2);border-left:1px solid var(--border2);z-index:201;display:flex;flex-direction:column;transform:translateX(100%);transition:transform .25s cubic-bezier(.4,0,.2,1)}
+.drawer.open{transform:translateX(0)}
+.dhead{padding:16px 18px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:10px}
+.dname{font-size:1.05rem;font-weight:700;color:#fff}
+.dsub{font-size:.76rem;color:var(--muted);margin-top:3px}
+.dtags{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px}
+.dtag{border-radius:20px;padding:3px 9px;font-size:.7rem;font-weight:600;background:var(--border2);color:#a0aec0}
+.dbody{flex:1;overflow-y:auto;padding:16px}
+.radar-wrap{position:relative;height:250px;margin-bottom:14px}
+.srow{display:grid;grid-template-columns:1fr auto 80px;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--bg)}
+.srow:last-child{border-bottom:none}
+.srow-name{font-size:.72rem;color:#a0aec0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.srow-val{font-size:.75rem;font-weight:600;color:var(--text);font-variant-numeric:tabular-nums}
+.srow-bar{height:3px;background:var(--border2);border-radius:2px;overflow:hidden}
+.srow-fill{height:100%;border-radius:2px}
+
+/* Compare panel */
+.compare-strip{background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:10px 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.cmp-slot{background:var(--bg);border:1px dashed var(--border2);border-radius:6px;padding:5px 10px;font-size:.76rem;color:var(--faint);min-width:120px;cursor:pointer;transition:.15s}
+.cmp-slot.filled{border-color:var(--blue);color:var(--text)}
+.cmp-slot:hover{border-color:var(--blue)}
+
+/* ── SVG charts ── */
+.svg-scroll{overflow-x:auto;overflow-y:hidden}
+svg text{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+
+/* ── Heatmap canvas ── */
+
+/* ── Combo ── */
+.combo-builder{background:var(--bg3);border:1px dashed var(--border2);border-radius:8px;padding:12px;margin-bottom:12px}
+.cbrow{display:grid;grid-template-columns:1fr 110px 1fr 110px auto;gap:8px;align-items:end}
+@media(max-width:900px){.cbrow{grid-template-columns:1fr 1fr}}
+.combo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:9px}
+.ccard{background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:12px;position:relative}
+.cc-t{font-size:.77rem;font-weight:700;margin-bottom:4px}
+.cc-d{font-size:.69rem;color:var(--muted);margin-bottom:7px;line-height:1.5}
+.cc-n{font-size:1.35rem;font-weight:700}
+.cc-p{font-size:.69rem;color:var(--muted);margin-top:2px}
+.cc-rm{position:absolute;top:8px;right:8px;background:none;border:none;color:var(--faint);cursor:pointer;font-size:.7rem}
+.cc-rm:hover{color:var(--red)}
+
+/* ── Shortlist tab ── */
+.shortlist-empty{padding:48px;text-align:center;color:var(--faint);font-size:.85rem}
+
+/* ── Custom metrics ── */
+.custom-metric-row{background:var(--bg3);border:1px solid var(--border2);border-radius:7px;padding:8px 12px;display:flex;align-items:center;gap:8px;font-size:.76rem}
+.custom-metric-name{font-weight:700;color:var(--text);flex:1}
+.custom-metric-formula{color:var(--muted);font-size:.7rem}
+
+/* Loading */
+.loading{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:400;align-items:center;justify-content:center}
+.loading.active{display:flex}
+.lbox{background:var(--bg2);border:1px solid var(--border2);border-radius:12px;padding:28px 44px;text-align:center}
+.spinner{width:34px;height:34px;border:3px solid var(--border2);border-top-color:var(--blue);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.empty-state{padding:40px;text-align:center;color:var(--faint);font-size:.82rem}
+.sb{background:var(--bg3);border:1px solid var(--border2);border-radius:6px;color:var(--text);padding:5px 9px;font-size:.76rem;outline:none}
+.sb:focus{border-color:var(--blue)}
+footer{text-align:center;padding:14px;color:var(--border2);font-size:.7rem;border-top:1px solid var(--bg3)}
+
+/* ── Chart export btn ── */
+.chart-export{background:none;border:1px solid var(--border2);color:var(--faint);border-radius:5px;padding:3px 8px;font-size:.7rem;cursor:pointer;transition:.15s}
+.chart-export:hover{border-color:var(--muted);color:var(--muted)}
+
+/* ── Scatter controls ── */
+.scatter-ctrls{display:grid;grid-template-columns:1fr 110px 1fr 110px auto auto;gap:10px;align-items:end;margin-bottom:14px}
+@media(max-width:1000px){.scatter-ctrls{grid-template-columns:1fr 1fr}}
+
+/* ── Parallel coords controls ── */
+.pc-metrics{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.pc-chip{background:var(--bg3);border:1px solid var(--border2);border-radius:20px;padding:3px 9px;font-size:.7rem;cursor:pointer;color:var(--muted);transition:.15s}
+.pc-chip.sel{background:#1a365d;border-color:var(--blue);color:var(--blue)}
+
+/* ── TopN controls ── */
+.topn-ctrls{display:flex;gap:10px;align-items:end;flex-wrap:wrap;margin-bottom:14px}
+.topn-ctrls>div{display:flex;flex-direction:column;gap:4px}
+.topn-ctrls label{font-size:.68rem;font-weight:600;color:var(--muted);text-transform:uppercase}
+.topn-ctrls select,.topn-ctrls input{background:var(--bg3);border:1px solid var(--border2);border-radius:6px;color:var(--text);padding:5px 8px;font-size:.78rem;outline:none;appearance:none}
+</style>
+</head>
+<body>
+
+<div class="loading" id="loading"><div class="lbox"><div class="spinner"></div><div style="color:#a0aec0;font-size:.83rem" id="lmsg">Processing…</div></div></div>
+
+<!-- Player Drawer -->
+<div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
+<div class="drawer" id="playerDrawer">
+  <div class="dhead">
+    <div style="flex:1">
+      <div class="dname" id="dName">—</div>
+      <div class="dsub" id="dSub">—</div>
+      <div class="dtags" id="dTags"></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">
+      <button style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1.1rem" onclick="closeDrawer()">✕</button>
+      <button class="star-btn" id="drawerStar" onclick="toggleStarCurrent()" title="Add to shortlist">☆</button>
+      <button class="btn btn-xs btn-ghost" onclick="addToCompare()">+ Compare</button>
+    </div>
+  </div>
+  <div class="dbody">
+    <div class="radar-wrap"><canvas id="radarChart"></canvas></div>
+    <div style="font-size:.68rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">All Metrics (percentile vs analysed group)</div>
+    <div id="drawerStatRows"></div>
+  </div>
+</div>
+
+<header>
+  <span style="font-size:1.4rem">⚡</span>
+  <h1>Wyscout Anomaly Explorer</h1>
+  <span id="headerInfo"></span>
+  <button id="shortlistBtn" onclick="switchTab('shortlist',document.querySelector('[data-tab=shortlist]'))">⭐ Shortlist <span id="shortlistCount">0</span></button>
+  <div class="export-wrap" id="exportWrap">
+    <button class="btn btn-sm btn-ghost" style="width:auto" onclick="toggleExportMenu()">⬇ Export List ▾</button>
+    <div class="export-menu" id="exportMenu">
+      <div class="export-menu-head">Export</div>
+      <div class="export-item" onclick="exportList('anomalies')"><span class="ei-icon">🔴</span><div><div class="ei-label">Anomalies</div><div class="ei-desc">Current anomaly table (filtered + searched)</div></div></div>
+      <div class="export-item" onclick="exportList('filtered')"><span class="ei-icon">📋</span><div><div class="ei-label">Full Filtered List</div><div class="ei-desc">All players matching current filters</div></div></div>
+      <div class="export-item" onclick="exportList('shortlist')"><span class="ei-icon">⭐</span><div><div class="ei-label">Shortlist</div><div class="ei-desc">Starred players only</div></div></div>
+      <div class="export-item" onclick="exportList('all')"><span class="ei-icon">🗂</span><div><div class="ei-label">All Loaded Data</div><div class="ei-desc">Every row from all loaded files</div></div></div>
+      <div class="export-col-picker">
+        <label>Columns to include</label>
+        <div class="export-col-list" id="exportColList"></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="app">
+<!-- ══ SIDEBAR ══ -->
+<div class="sidebar">
+
+  <!-- Files -->
+  <div class="scard">
+    <div class="scard-head">📂 Data Files</div>
+    <div class="scard-body">
+      <div class="upload-zone" id="uploadZone">
+        <input type="file" id="fileInput" accept=".xlsx,.xls" multiple>
+        <div style="font-size:1.6rem">📂</div>
+        <div style="font-size:.78rem;color:#a0aec0;margin-top:5px">Drop files or click</div>
+        <p>Multiple league files supported</p>
+      </div>
+      <div class="file-list" id="fileList"></div>
+      <div style="margin-top:8px;display:flex;gap:6px">
+        <button class="btn btn-sm btn-ghost" onclick="clearFiles()" style="width:auto">Clear All</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="scard">
+    <div class="scard-head">🎛 Filters</div>
+    <div class="scard-body">
+      <div class="ctrl-row">
+        <label>Position</label>
+        <select id="posFilter">
+          <option value="">All Positions</option>
+          <option value="CF">CF — Centre Forward</option>
+          <option value="GK">GK — Goalkeeper</option>
+          <option value="CB">CB — Centre Back</option>
+          <option value="LCB">LCB</option><option value="RCB">RCB</option>
+          <option value="LB">LB — Left Back</option><option value="RB">RB — Right Back</option>
+          <option value="DMF">DMF — Def. Mid</option><option value="CMF">CMF — Centre Mid</option>
+          <option value="AMF">AMF — Att. Mid</option>
+          <option value="LW">LW</option><option value="RW">RW</option>
+          <option value="LWF">LWF</option><option value="RWF">RWF</option>
+        </select>
+      </div>
+      <div class="ctrl-row">
+        <label>League</label>
+        <select id="leagueFilter"><option value="">All Leagues</option></select>
+      </div>
+      <div class="ctrl-row">
+        <label>Quick Presets</label>
+        <div class="presets">
+          <span class="preset-chip" onclick="applyPreset(this,'u21')" title="Max age 21">U21</span>
+          <span class="preset-chip" onclick="applyPreset(this,'u23')" title="Max age 23">U23</span>
+          <span class="preset-chip" onclick="applyPreset(this,'min900')" title="900+ minutes">900 min</span>
+          <span class="preset-chip" onclick="applyPreset(this,'min1500')" title="1500+ minutes">1500 min</span>
+          <span class="preset-chip" onclick="applyPreset(this,'reset')">Reset</span>
+        </div>
+      </div>
+      <div class="ctrl-row">
+        <label>Min Minutes</label>
+        <input type="number" id="minMinutes" value="400" min="0" step="50">
+      </div>
+      <div class="ctrl-row">
+        <label>Max Age</label>
+        <input type="number" id="maxAge" value="99" min="10" step="1">
+      </div>
+    </div>
+  </div>
+
+  <!-- Anomaly settings -->
+  <div class="scard">
+    <div class="scard-head">🔍 Anomaly Settings</div>
+    <div class="scard-body">
+      <div class="ctrl-row">
+        <label>Metric</label>
+        <select id="metricSelect"></select>
+      </div>
+      <div class="ctrl-row">
+        <label>Direction</label>
+        <select id="dirFilter">
+          <option value="both">Both</option>
+          <option value="high">High Only</option>
+          <option value="low">Low Only</option>
+        </select>
+      </div>
+      <div class="ctrl-row">
+        <label>Z-Score Threshold</label>
+        <input type="number" id="zThreshold" value="2.0" min="0.5" max="5" step="0.1">
+      </div>
+      <button class="btn" id="analyseBtn" onclick="runAnalysis()" disabled>⚡ Analyse</button>
+    </div>
+  </div>
+
+  <!-- Custom metrics -->
+  <div class="scard">
+    <div class="scard-head">🔧 Custom Metrics</div>
+    <div class="scard-body">
+      <div class="ctrl-row">
+        <label>Name</label>
+        <input type="text" id="cmName" placeholder="e.g. G+A per 90">
+      </div>
+      <div class="ctrl-row">
+        <label>Metric A</label>
+        <select id="cmA"></select>
+      </div>
+      <div class="ctrl-row">
+        <label>Operator</label>
+        <select id="cmOp">
+          <option value="+">A + B</option>
+          <option value="-">A − B</option>
+          <option value="*">A × B</option>
+          <option value="/">A ÷ B</option>
+          <option value="diff_xg">Goals − xG (over/underperf)</option>
+        </select>
+      </div>
+      <div class="ctrl-row">
+        <label>Metric B</label>
+        <select id="cmB"></select>
+      </div>
+      <button class="btn btn-sm btn-green" onclick="addCustomMetric()" style="width:100%">Add Metric</button>
+      <div id="customMetricList" style="margin-top:8px;display:flex;flex-direction:column;gap:5px"></div>
+    </div>
+  </div>
+
+  <!-- Compare panel -->
+  <div class="scard">
+    <div class="scard-head">👥 Compare Players</div>
+    <div class="scard-body">
+      <div style="font-size:.72rem;color:var(--faint);margin-bottom:8px">Click "+ Compare" in any player drawer to add up to 3 players.</div>
+      <div id="compareSlots" style="display:flex;flex-direction:column;gap:5px"></div>
+      <button class="btn btn-sm btn-ghost" style="margin-top:8px" onclick="runCompare()">Compare →</button>
+      <button class="btn btn-xs" style="margin-top:5px;background:transparent;color:var(--faint);border:none" onclick="clearCompare()">Clear</button>
+    </div>
+  </div>
+
+</div><!-- /sidebar -->
+
+<!-- ══ MAIN ══ -->
+<div class="main">
+
+  <div class="tabs" id="mainTabs">
+    <button class="tab active" data-tab="anomaly" onclick="switchTab('anomaly',this)">📊 Anomaly Table</button>
+    <button class="tab" data-tab="scatter" onclick="switchTab('scatter',this)">🔵 Scatter</button>
+    <button class="tab" data-tab="parallel" onclick="switchTab('parallel',this)">〰 Parallel Coords</button>
+    <button class="tab" data-tab="boxplot" onclick="switchTab('boxplot',this)">📦 Box Plots</button>
+    <button class="tab" data-tab="topn" onclick="switchTab('topn',this)">🏆 Top-N</button>
+    <button class="tab" data-tab="combos" onclick="switchTab('combos',this)">🧩 Combos</button>
+    <button class="tab" data-tab="shortlist" onclick="switchTab('shortlist',this)">⭐ Shortlist</button>
+    <button class="tab" data-tab="compare" onclick="switchTab('compare',this)">👥 Compare</button>
+    <button class="tab" data-tab="scores" onclick="switchTab('scores',this)">🏅 Scores</button>
+    <button class="tab" data-tab="similar" onclick="switchTab('similar',this)">🔎 Similar</button>
+  </div>
+
+  <!-- ── ANOMALY TABLE ── -->
+  <div class="tab-panel active" id="tab-anomaly">
+    <div class="stats-bar">
+      <div class="scard2"><div class="sv" style="color:var(--blue)" id="stTotal">—</div><div class="sl">Analysed</div></div>
+      <div class="scard2"><div class="sv" style="color:var(--red)" id="stHigh">—</div><div class="sl">High Outliers</div></div>
+      <div class="scard2"><div class="sv" style="color:var(--yellow)" id="stLow">—</div><div class="sl">Low Outliers</div></div>
+      <div class="scard2"><div class="sv" id="stMean">—</div><div class="sl">Mean</div></div>
+      <div class="scard2"><div class="sv" id="stStd">—</div><div class="sl">Std Dev</div></div>
+      <div class="scard2"><div class="sv" style="color:var(--purple)" id="stLeagues">—</div><div class="sl">Leagues</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:320px 1fr;gap:16px">
+      <div class="panel">
+        <div class="panel-head"><h3>Distribution — <span id="chartMetricLabel">metric</span></h3><button class="chart-export" onclick="exportChart('distChart')">PNG</button></div>
+        <div class="panel-body">
+          <div style="position:relative;height:220px"><canvas id="distChart"></canvas></div>
+          <div style="margin-top:12px">
+            <div style="font-size:.68rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px">Top 10 Anomalies</div>
+            <div id="top10List"></div>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-head">
+          <h3>Anomalous Players</h3>
+          <input class="sb" id="tableSearch" placeholder="Name / team / league…" oninput="filterTable()" style="margin-left:auto;width:170px">
+          <span style="font-size:.73rem;color:var(--faint)" id="tableCount"></span>
+          <button class="btn btn-sm btn-ghost" onclick="exportCSV()">CSV</button>
+        </div>
+        <div class="tscroll">
+          <table id="anomalyTable"><thead id="tableHead"></thead><tbody id="tableBody"></tbody></table>
+          <div class="empty-state" id="emptyState" style="display:none">No anomalies found — try lowering the Z-score threshold</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SCATTER ── -->
+  <div class="tab-panel" id="tab-scatter">
+    <div class="panel">
+      <div class="panel-head"><h3>Scatter Plot</h3><button class="chart-export" onclick="exportChart('scatterChart')">PNG</button></div>
+      <div class="panel-body">
+        <div class="scatter-ctrls">
+          <div><label style="font-size:.68rem;font-weight:600;color:var(--muted);display:block;margin-bottom:3px;text-transform:uppercase">X Axis</label><select id="scX"></select></div>
+          <div><label style="font-size:.68rem;font-weight:600;color:var(--muted);display:block;margin-bottom:3px;text-transform:uppercase">X Outlier</label>
+            <select id="scXdir"><option value="both">Both</option><option value="high">High</option><option value="low">Low</option><option value="none">None</option></select></div>
+          <div><label style="font-size:.68rem;font-weight:600;color:var(--muted);display:block;margin-bottom:3px;text-transform:uppercase">Y Axis</label><select id="scY"></select></div>
+          <div><label style="font-size:.68rem;font-weight:600;color:var(--muted);display:block;margin-bottom:3px;text-transform:uppercase">Y Outlier</label>
+            <select id="scYdir"><option value="both">Both</option><option value="high">High</option><option value="low">Low</option><option value="none">None</option></select></div>
+          <div><label style="font-size:.68rem;font-weight:600;color:var(--muted);display:block;margin-bottom:3px;text-transform:uppercase">Highlight</label>
+            <input type="text" id="scHighlight" placeholder="Player name…" style="width:140px"></div>
+          <button class="btn btn-sm" onclick="drawScatter()" style="white-space:nowrap;align-self:flex-end">Plot</button>
+        </div>
+        <div style="font-size:.7rem;color:var(--faint);margin-bottom:10px">🔴 X outlier · 🔵 Y outlier · 🟡 Both · ⚪ Normal · Click dot for player profile</div>
+        <div style="position:relative;height:400px"><canvas id="scatterChart"></canvas></div>
+        <div id="scatterLegend" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── PARALLEL COORDS ── -->
+  <div class="tab-panel" id="tab-parallel">
+    <div class="panel">
+      <div class="panel-head"><h3>Parallel Coordinates</h3><button class="chart-export" onclick="exportSVG('pcSvg','parallel_coords.svg')">SVG</button></div>
+      <div class="panel-body">
+        <div style="font-size:.72rem;color:var(--faint);margin-bottom:10px">Select 3–8 metrics to plot. Anomalous players are highlighted. Hover a line to see the player name.</div>
+        <div class="pc-metrics" id="pcMetricChips"></div>
+        <button class="btn btn-sm" onclick="drawParallelCoords()" style="width:auto;margin-bottom:14px">Draw</button>
+        <div class="svg-scroll"><svg id="pcSvg" style="display:block"></svg></div>
+        <div id="pcTooltip" style="position:fixed;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:8px 12px;font-size:.75rem;pointer-events:none;display:none;z-index:100"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── BOX PLOTS ── -->
+  <div class="tab-panel" id="tab-boxplot">
+    <div class="panel">
+      <div class="panel-head"><h3>League Box Plots</h3><button class="chart-export" onclick="exportSVG('bpSvg','boxplots.svg')">SVG</button></div>
+      <div class="panel-body">
+        <div style="font-size:.72rem;color:var(--faint);margin-bottom:12px">Distribution of the selected metric per loaded league. Sorted by median. Requires multiple files loaded.</div>
+        <button class="btn btn-sm" onclick="drawBoxPlots()" style="width:auto;margin-bottom:14px">Draw</button>
+        <div class="svg-scroll"><svg id="bpSvg" style="display:block"></svg></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── TOP-N ── -->
+  <div class="tab-panel" id="tab-topn">
+    <div class="panel">
+      <div class="panel-head"><h3>Top-N Ranking</h3><button class="chart-export" onclick="exportChart('topnChart')">PNG</button></div>
+      <div class="panel-body">
+        <div class="topn-ctrls">
+          <div><label>Metric</label><select id="topnMetric" style="min-width:220px"></select></div>
+          <div><label>Show</label>
+            <select id="topnDir"><option value="top">Top N</option><option value="bottom">Bottom N</option><option value="both">Both</option></select></div>
+          <div><label>N</label><input type="number" id="topnN" value="20" min="5" max="100" step="5" style="width:70px"></div>
+          <button class="btn btn-sm" onclick="drawTopN()" style="align-self:flex-end">Draw</button>
+        </div>
+        <div style="position:relative" id="topnWrap"><canvas id="topnChart"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── COMBOS ── -->
+  <div class="tab-panel" id="tab-combos">
+    <div class="panel">
+      <div class="panel-head"><h3>Combination Anomalies</h3></div>
+      <div class="panel-body">
+        <div class="combo-builder">
+          <div style="font-size:.75rem;font-weight:700;color:#a0aec0;margin-bottom:10px">Build custom pattern</div>
+          <div class="cbrow">
+            <div><label style="font-size:.68rem;font-weight:600;color:var(--muted);display:block;margin-bottom:3px">Metric 1</label><select id="cb1m"></select></div>
+            <div><label style="font-size:.68rem;font-weight:600;color:var(--muted);display:block;margin-bottom:3px">Dir</label>
+              <select id="cb1d"><option value="high">High ↑</option><option value="low">Low ↓</option></select></div>
+            <div><label style="font-size:.68rem;font-weight:600;color:var(--muted);display:block;margin-bottom:3px">Metric 2</label><select id="cb2m"></select></div>
+            <div><label style="font-size:.68rem;font-weight:600;color:var(--muted);display:block;margin-bottom:3px">Dir</label>
+              <select id="cb2d"><option value="high">High ↑</option><option value="low">Low ↓</option></select></div>
+            <button class="btn btn-sm btn-green" onclick="addCustomCombo()" style="align-self:flex-end">Add</button>
+          </div>
+        </div>
+        <div class="combo-grid" id="comboGrid"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SHORTLIST ── -->
+  <div class="tab-panel" id="tab-shortlist">
+    <div class="panel">
+      <div class="panel-head">
+        <h3>⭐ Shortlist</h3>
+        <span style="font-size:.73rem;color:var(--faint)" id="shortlistCountPanel">0 players</span>
+        <button class="btn btn-sm btn-ghost" onclick="exportShortlist()" style="margin-left:auto">Export CSV</button>
+        <button class="btn btn-sm btn-red" onclick="clearShortlist()">Clear</button>
+      </div>
+      <div id="shortlistContent"><div class="shortlist-empty">⭐ No players shortlisted yet.<br>Click the ☆ in any player drawer to add them.</div></div>
+    </div>
+  </div>
+
+  <!-- ── COMPARE ── -->
+  <div class="tab-panel" id="tab-compare">
+    <div class="panel">
+      <div class="panel-head"><h3>👥 Player Comparison</h3></div>
+      <div class="panel-body">
+        <div style="font-size:.72rem;color:var(--faint);margin-bottom:14px">Add players via the drawer → "+ Compare" button, then click Compare → in the sidebar.</div>
+        <div style="position:relative;height:340px;max-width:600px;margin:0 auto"><canvas id="compareRadar"></canvas></div>
+        <div id="compareTable" style="margin-top:16px"></div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ── SCORES ── -->
+  <div class="tab-panel" id="tab-scores">
+    <div style="display:grid;grid-template-columns:380px 1fr;gap:16px">
+
+      <!-- Builder -->
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <!-- Profile library -->
+        <div class="panel">
+          <div class="panel-head"><h3>🗂 Profile Library</h3><span style="font-size:.7rem;color:var(--faint);margin-left:auto">Click to load</span></div>
+          <div class="panel-body" style="padding:10px">
+            <div id="profileLibrary" style="display:flex;flex-direction:column;gap:5px"></div>
+          </div>
+        </div>
+        <!-- Builder -->
+        <div class="panel">
+          <div class="panel-head">
+            <h3>⚙️ Score Builder</h3>
+            <button class="btn btn-sm btn-ghost" style="margin-left:auto" onclick="clearScoreBuilder()">Clear</button>
+          </div>
+          <div class="panel-body">
+            <div class="ctrl-row">
+              <label>Score Name</label>
+              <input type="text" id="scoreName" placeholder="e.g. Finishing Score">
+            </div>
+            <div class="ctrl-row">
+              <label>Normalisation</label>
+              <select id="scoreNorm">
+                <option value="percentile">Percentile (0–100)</option>
+                <option value="zscore">Z-Score (clipped ±3, scaled 0–100)</option>
+              </select>
+            </div>
+            <div class="ctrl-row">
+              <label>League Tier Adjustment</label>
+              <select id="scoreTierAdj">
+                <option value="none">None</option>
+                <option value="soft">Soft (×0.95 per tier below 1)</option>
+                <option value="hard">Hard (×0.90 per tier below 1)</option>
+              </select>
+            </div>
+            <div style="font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:6px;margin-top:4px">Metrics &amp; Weights</div>
+            <div id="scoreMetricRows" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px"></div>
+            <div style="display:flex;gap:8px;margin-bottom:12px">
+              <select id="scoreAddMetric" style="flex:1;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;color:var(--text);padding:5px 8px;font-size:.78rem;outline:none;appearance:none"></select>
+              <button class="btn btn-sm btn-green" onclick="addScoreMetricRow()">+ Add</button>
+            </div>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-green" onclick="computeScore()">▶ Compute Score</button>
+              <button class="btn btn-sm btn-ghost" onclick="saveScoreAsProfile()">💾 Save Profile</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Results -->
+      <div class="panel">
+        <div class="panel-head">
+          <h3 id="scoreResultTitle">Score Results</h3>
+          <button class="chart-export" onclick="exportChart('scoreBarChart')" style="margin-left:auto">PNG</button>
+          <button class="btn btn-sm btn-ghost" onclick="exportScoreTable()">CSV</button>
+        </div>
+        <div class="panel-body">
+          <div style="position:relative;height:300px"><canvas id="scoreBarChart"></canvas></div>
+          <div class="tscroll" style="margin-top:14px;max-height:340px">
+            <table><thead><tr><th></th><th onclick="sortScoreTable('rank')">#</th><th onclick="sortScoreTable('name')">Player</th><th onclick="sortScoreTable('team')">Team</th><th onclick="sortScoreTable('pos')">Pos</th><th onclick="sortScoreTable('league')">League</th><th onclick="sortScoreTable('score')" style="color:var(--yellow)">Score ▾</th></tr></thead>
+            <tbody id="scoreTableBody"></tbody></table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SIMILAR ── -->
+  <div class="tab-panel" id="tab-similar">
+    <div style="display:grid;grid-template-columns:320px 1fr;gap:16px">
+      <div class="panel">
+        <div class="panel-head"><h3>🔎 Find Similar Players</h3></div>
+        <div class="panel-body">
+          <div class="ctrl-row">
+            <label>Reference Player</label>
+            <input type="text" id="simPlayerInput" placeholder="Type name…" oninput="simPlayerSuggest()" autocomplete="off">
+            <div id="simPlayerSuggestions" style="background:var(--bg3);border:1px solid var(--border2);border-radius:6px;margin-top:4px;display:none;max-height:140px;overflow-y:auto"></div>
+          </div>
+          <div id="simRefCard" style="background:var(--bg3);border:1px solid var(--border2);border-radius:7px;padding:10px;margin-bottom:10px;display:none">
+            <div id="simRefName" style="font-weight:700;font-size:.85rem"></div>
+            <div id="simRefSub" style="font-size:.72rem;color:var(--muted);margin-top:2px"></div>
+          </div>
+          <div class="ctrl-row">
+            <label>Metric Space</label>
+            <select id="simMetricSet">
+              <option value="key">Key attacking (Goals, xG, Shots, Touches, Dribbles, xA…)</option>
+              <option value="all">All numeric metrics</option>
+              <option value="custom">Custom selection below</option>
+            </select>
+          </div>
+          <div id="simCustomMetrics" style="display:none;margin-bottom:10px">
+            <div class="pc-metrics" id="simMetricChips"></div>
+          </div>
+          <div class="ctrl-row">
+            <label>Number of Results</label>
+            <input type="number" id="simN" value="15" min="5" max="100" step="5">
+          </div>
+          <div class="ctrl-row">
+            <label>Search Pool</label>
+            <select id="simPool">
+              <option value="filtered">Filtered players only</option>
+              <option value="all">All loaded players</option>
+            </select>
+          </div>
+          <button class="btn" onclick="findSimilar()">Find Similar</button>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h3 id="simResultTitle">Similar Players</h3><button class="btn btn-sm btn-ghost" style="margin-left:auto" onclick="exportSimResults()">CSV</button></div>
+        <div class="panel-body" style="padding:0">
+          <div style="padding:14px 16px;display:none" id="simRadarWrap">
+            <div style="position:relative;height:260px"><canvas id="simRadar"></canvas></div>
+          </div>
+          <div class="tscroll">
+            <table><thead><tr><th>#</th><th>Player</th><th>Team</th><th>Pos</th><th>League</th><th>Similarity</th><th></th></tr></thead>
+            <tbody id="simTableBody"></tbody></table>
+            <div class="empty-state" id="simEmpty">Select a reference player and click Find Similar.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /main -->
+</div><!-- /app -->
+<footer>Wyscout Anomaly Explorer — local tool, no data sent externally</footer>
+
+<script>
+/* ═══════════════════════════════════════
+   STATE
+═══════════════════════════════════════ */
+let loadedFiles=[], allRows=[], filteredRows=[], anomalyRows=[], displayedRows=[];
+let numericCols=[], colStats={}, customMetrics=[];
+let sortCol=null, sortDir=1;
+let distChartI=null, scatterChartI=null, radarChartI=null, topnChartI=null, compareRadarI=null;
+let leagueColors={};
+let shortlist=JSON.parse(localStorage.getItem('wyscout_shortlist')||'[]');
+let comparePlayers=[];
+let customCombos=[], currentDrawerRow=null;
+let pcSelectedMetrics=[];
+const PALETTE=['#63b3ed','#68d391','#f6e05e','#fc8181','#b794f4','#fbd38d','#76e4f7','#f687b3','#9ae6b4','#90cdf4','#ffa07a','#dda0dd','#add8e6'];
+const RADAR_METRICS=['Goals per 90','xG per 90','Goal conversion, %','Shots on target, %','Touches in box per 90','Shots per 90','xA per 90','Key passes per 90','Assists per 90','Dribbles per 90','Successful dribbles, %','Aerial duels won, %'];
+const PRESET_COMBOS=[
+  {title:'Chance Hoarders',desc:'High xG/90 + low conversion — generating but not finishing',color:'#f6e05e',m1:'xG per 90',d1:'high',m2:'Goal conversion, %',d2:'low',z:1.5},
+  {title:'Clinical Finishers',desc:'High conversion + low-moderate xG — overperforming xG',color:'#68d391',m1:'Goal conversion, %',d1:'high',m2:'xG per 90',d2:'low',z:1.5},
+  {title:'Ghost Attackers',desc:'Low Touches in Box despite high minutes',color:'#90cdf4',m1:'Touches in box per 90',d1:'low',m2:'Minutes played',d2:'high',z:1.5},
+  {title:'Shot-Heavy Low Accuracy',desc:'High Shots/90 but poor on-target %',color:'#fc8181',m1:'Shots per 90',d1:'high',m2:'Shots on target, %',d2:'low',z:1.5},
+  {title:'Creative Strikers',desc:'High xA/90 + Key passes/90 — more playmaker than finisher',color:'#b794f4',m1:'xA per 90',d1:'high',m2:'Key passes per 90',d2:'high',z:1.5},
+  {title:'Aerial Dominators',desc:'High aerial duel volume + win rate',color:'#fbd38d',m1:'Aerial duels won, %',d1:'high',m2:'Aerial duels per 90',d2:'high',z:1.5},
+  {title:'Elite Dribblers',desc:'High dribble volume + success rate',color:'#f687b3',m1:'Dribbles per 90',d1:'high',m2:'Successful dribbles, %',d2:'high',z:1.5},
+  {title:'Pressing Machines',desc:'Unusual defensive duel volume for their position',color:'#76e4f7',m1:'Defensive duels per 90',d1:'high',m2:'Fouls per 90',d2:'high',z:1.5},
+];
+
+/* ═══════════════════════════════════════
+   FILE LOADING
+═══════════════════════════════════════ */
+const uz=document.getElementById('uploadZone'), fi=document.getElementById('fileInput');
+uz.addEventListener('click',()=>fi.click());
+uz.addEventListener('dragover',e=>{e.preventDefault();uz.classList.add('drag-over')});
+uz.addEventListener('dragleave',()=>uz.classList.remove('drag-over'));
+uz.addEventListener('drop',e=>{e.preventDefault();uz.classList.remove('drag-over');handleFiles(e.dataTransfer.files)});
+fi.addEventListener('change',e=>handleFiles(e.target.files));
+
+function showLoad(v,msg='Processing…'){document.getElementById('loading').classList.toggle('active',v);document.getElementById('lmsg').textContent=msg}
+
+function handleFiles(files){
+  if(!files.length)return;
+  showLoad(true,`Loading ${files.length} file(s)…`);
+  let idx=0;
+  function next(){
+    if(idx>=files.length){mergeAll();showLoad(false);return}
+    const f=files[idx++];
+    const r=new FileReader();
+    r.onload=e=>{
+      try{
+        const wb=XLSX.read(e.target.result,{type:'array'});
+        const sn=wb.SheetNames.includes('All Strikers')?'All Strikers':wb.SheetNames[0];
+        const rows=XLSX.utils.sheet_to_json(wb.Sheets[sn],{defval:null});
+        const league=f.name.replace(/\.xlsx?$/i,'');
+        if(!leagueColors[league])leagueColors[league]=PALETTE[Object.keys(leagueColors).length%PALETTE.length];
+        loadedFiles.push({name:f.name,league,rows});
+      }catch(err){console.warn('Skip',f.name,err)}
+      setTimeout(next,0);
+    };
+    r.readAsArrayBuffer(f);
+  }
+  setTimeout(next,20);
+}
+
+function mergeAll(){
+  allRows=[];
+  loadedFiles.forEach(f=>f.rows.forEach(r=>allRows.push({...r,_league:f.league,_file:f.name})));
+  const sample=allRows.slice(0,200);
+  const keys=allRows.length?Object.keys(allRows[0]).filter(k=>!k.startsWith('_')):[];
+  numericCols=keys.filter(k=>{
+    const vals=sample.map(r=>r[k]).filter(v=>v!==null&&v!==''&&v!==undefined);
+    return vals.length>5&&vals.filter(v=>typeof v==='number'||!isNaN(parseFloat(v))).length>vals.length*.6;
+  });
+  // Add custom metrics to list
+  customMetrics.forEach(cm=>{ if(!numericCols.includes(cm.name)) numericCols.push(cm.name); });
+
+  const priority=numericCols.filter(k=>/per 90/i.test(k)||/%/.test(k)||/xG|xA/i.test(k));
+  const rest=numericCols.filter(k=>!priority.includes(k));
+  const all=[...priority,...rest];
+  const opts=all.map(k=>`<option value="${escH(k)}">${escH(k)}</option>`).join('');
+  ['metricSelect','scX','scY','cb1m','cb2m','cmA','cmB','topnMetric'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.innerHTML=opts;
+  });
+  document.getElementById('scY').selectedIndex=1;
+  document.getElementById('cb2m').selectedIndex=Math.min(2,all.length-1);
+  document.getElementById('cmB').selectedIndex=Math.min(1,all.length-1);
+
+  // PC chips
+  const coreCols=priority.slice(0,20);
+  document.getElementById('pcMetricChips').innerHTML=coreCols.map((m,i)=>`<span class="pc-chip${i<6?' sel':''}" data-m="${escH(m)}" onclick="togglePcChip(this)">${escH(m)}</span>`).join('');
+  pcSelectedMetrics=coreCols.slice(0,6);
+
+  const leagues=[...new Set(loadedFiles.map(f=>f.league))].sort();
+  document.getElementById('leagueFilter').innerHTML='<option value="">All Leagues</option>'+leagues.map(l=>`<option value="${escH(l)}">${escH(l)}</option>`).join('');
+
+  renderFileList();
+  renderLegend();
+  initScoreUI();
+  initSimUI();
+  document.getElementById('analyseBtn').disabled=false;
+  document.getElementById('headerInfo').textContent=`${allRows.length.toLocaleString()} rows · ${loadedFiles.length} file(s)`;
+}
+
+function renderFileList(){
+  document.getElementById('fileList').innerHTML=loadedFiles.map((f,i)=>`
+    <div class="file-item">
+      <div class="fi-dot" style="background:${leagueColors[f.league]}"></div>
+      <span class="fi-name" title="${escH(f.name)}">${escH(f.league)}</span>
+      <span class="fi-n">${f.rows.length.toLocaleString()}</span>
+      <button class="fi-rm" onclick="removeFile(${i})">✕</button>
+    </div>`).join('');
+}
+function renderLegend(){
+  document.getElementById('scatterLegend').innerHTML=Object.entries(leagueColors).map(([l,c])=>`<span style="display:flex;align-items:center;gap:4px;font-size:.7rem;color:var(--muted)"><span style="width:8px;height:8px;border-radius:50%;background:${c};display:inline-block"></span>${escH(l)}</span>`).join('');
+}
+function removeFile(i){loadedFiles.splice(i,1);if(!loadedFiles.length){clearFiles();return}mergeAll()}
+function clearFiles(){loadedFiles=[];allRows=[];filteredRows=[];anomalyRows=[];displayedRows=[];leagueColors={};colStats={};document.getElementById('fileList').innerHTML='';document.getElementById('fileInput').value='';document.getElementById('analyseBtn').disabled=true;document.getElementById('headerInfo').textContent='';document.getElementById('tableBody').innerHTML='';document.getElementById('tableHead').innerHTML=''}
+
+/* ═══════════════════════════════════════
+   QUICK PRESETS
+═══════════════════════════════════════ */
+function applyPreset(el,type){
+  document.querySelectorAll('.preset-chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  const mm=document.getElementById('minMinutes'), ma=document.getElementById('maxAge');
+  if(type==='u21'){ma.value=21}
+  else if(type==='u23'){ma.value=23}
+  else if(type==='min900'){mm.value=900}
+  else if(type==='min1500'){mm.value=1500}
+  else{mm.value=400;ma.value=99;el.classList.remove('active')}
+}
+
+/* ═══════════════════════════════════════
+   CUSTOM METRICS
+═══════════════════════════════════════ */
+function addCustomMetric(){
+  const name=document.getElementById('cmName').value.trim();
+  const a=document.getElementById('cmA').value;
+  const op=document.getElementById('cmOp').value;
+  const b=document.getElementById('cmB').value;
+  if(!name||!a||!b){alert('Fill in all fields');return}
+  customMetrics.push({name,a,op,b});
+  document.getElementById('cmName').value='';
+  // Compute values for all rows
+  allRows.forEach(r=>{
+    const va=parseFloat(r[a]), vb=parseFloat(r[b]);
+    if(isNaN(va)||isNaN(vb)){r[name]=null;return}
+    if(op==='+') r[name]=va+vb;
+    else if(op==='-') r[name]=va-vb;
+    else if(op==='*') r[name]=va*vb;
+    else if(op==='/') r[name]=vb!==0?va/vb:null;
+    else if(op==='diff_xg') r[name]=va-vb;
+  });
+  renderCustomMetricList();
+  mergeAll();
+}
+function removeCustomMetric(i){
+  const name=customMetrics[i].name;
+  customMetrics.splice(i,1);
+  allRows.forEach(r=>delete r[name]);
+  numericCols=numericCols.filter(c=>c!==name);
+  renderCustomMetricList();
+  mergeAll();
+}
+function renderCustomMetricList(){
+  document.getElementById('customMetricList').innerHTML=customMetrics.map((cm,i)=>`
+    <div class="custom-metric-row">
+      <span class="custom-metric-name">${escH(cm.name)}</span>
+      <span class="custom-metric-formula">${escH(cm.a)} ${cm.op} ${escH(cm.b)}</span>
+      <button class="btn-xs btn-red btn" onclick="removeCustomMetric(${i})" style="width:auto">✕</button>
+    </div>`).join('');
+}
+
+/* ═══════════════════════════════════════
+   ANALYSIS
+═══════════════════════════════════════ */
+function runAnalysis(){
+  const metric=document.getElementById('metricSelect').value;
+  const pos=document.getElementById('posFilter').value;
+  const league=document.getElementById('leagueFilter').value;
+  const dir=document.getElementById('dirFilter').value;
+  const zThresh=parseFloat(document.getElementById('zThreshold').value)||2.0;
+  const minMin=parseFloat(document.getElementById('minMinutes').value)||0;
+  const maxAge=parseFloat(document.getElementById('maxAge').value)||99;
+  if(!allRows.length)return;
+  showLoad(true,'Calculating…');
+  setTimeout(()=>{
+    filteredRows=allRows.filter(r=>{
+      const mins=parseFloat(r['Minutes played'])||0;
+      const age=parseFloat(r['Age'])||0;
+      if(mins<minMin)return false;
+      if(age>maxAge&&age>0)return false;
+      if(pos){const p=(r['Position']||'').toString();if(!p.split(',').map(s=>s.trim()).includes(pos))return false}
+      if(league&&r._league!==league)return false;
+      return!isNaN(parseFloat(r[metric]));
+    });
+    colStats={};
+    numericCols.forEach(col=>{
+      const vals=filteredRows.map(r=>parseFloat(r[col])).filter(v=>!isNaN(v));
+      if(!vals.length)return;
+      vals.sort((a,b)=>a-b);
+      const mean=vals.reduce((a,b)=>a+b,0)/vals.length;
+      const std=Math.sqrt(vals.reduce((a,b)=>a+(b-mean)**2,0)/vals.length)||1;
+      colStats[col]={mean,std,min:vals[0],max:vals[vals.length-1],vals};
+    });
+    const cs=colStats[metric]; if(!cs){showLoad(false);return}
+    const tagged=filteredRows.map(r=>({...r,_value:parseFloat(r[metric]),_z:(parseFloat(r[metric])-cs.mean)/cs.std}));
+    anomalyRows=tagged.filter(r=>{
+      if(dir==='high')return r._z>=zThresh;
+      if(dir==='low')return r._z<=-zThresh;
+      return Math.abs(r._z)>=zThresh;
+    }).sort((a,b)=>Math.abs(b._z)-Math.abs(a._z));
+    displayedRows=[...anomalyRows];
+    const high=tagged.filter(r=>r._z>=zThresh).length;
+    const low=tagged.filter(r=>r._z<=-zThresh).length;
+    document.getElementById('stTotal').textContent=filteredRows.length.toLocaleString();
+    document.getElementById('stHigh').textContent=high.toLocaleString();
+    document.getElementById('stLow').textContent=low.toLocaleString();
+    document.getElementById('stMean').textContent=cs.mean.toFixed(2);
+    document.getElementById('stStd').textContent=cs.std.toFixed(2);
+    document.getElementById('stLeagues').textContent=new Set(filteredRows.map(r=>r._league)).size;
+    drawDistChart(tagged.map(r=>r._value),cs.mean,cs.std,zThresh,metric);
+    renderTop10(anomalyRows.slice(0,10));
+    renderTable(anomalyRows,metric,zThresh);
+    document.getElementById('chartMetricLabel').textContent=metric;
+    renderAllCombos();
+    showLoad(false);
+  },30);
+}
+
+/* ═══════════════════════════════════════
+   DISTRIBUTION CHART
+═══════════════════════════════════════ */
+function drawDistChart(vals,mean,std,thresh,metric){
+  const ctx=document.getElementById('distChart').getContext('2d');
+  if(distChartI)distChartI.destroy();
+  const mn=Math.min(...vals),mx=Math.max(...vals),bins=28,step=(mx-mn)/bins||1;
+  const counts=Array(bins).fill(0);
+  vals.forEach(v=>{let i=Math.min(Math.floor((v-mn)/step),bins-1);counts[i]++});
+  const lo=mean-thresh*std,hi=mean+thresh*std;
+  const colors=Array.from({length:bins},(_,i)=>{const m=mn+(i+.5)*step;return m>=hi?'#c5303088':m<=lo?'#2b6cb088':'#38a16955'});
+  distChartI=new Chart(ctx,{type:'bar',data:{labels:Array.from({length:bins},(_,i)=>(mn+i*step).toFixed(2)),datasets:[{data:counts,backgroundColor:colors,borderWidth:0,borderRadius:2}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{title:i=>`~${parseFloat(i[0].label).toFixed(2)}`,label:i=>`${i.raw} players`}}},
+    scales:{x:{ticks:{color:'#4a5568',maxTicksLimit:5,font:{size:9}},grid:{color:'#1a1f2e'}},y:{ticks:{color:'#4a5568',font:{size:9}},grid:{color:'#1a1f2e'}}},animation:{duration:200}}});
+}
+
+/* ═══════════════════════════════════════
+   TOP 10
+═══════════════════════════════════════ */
+function renderTop10(rows){
+  const el=document.getElementById('top10List');
+  el.innerHTML=rows.map((r,i)=>{
+    const z=r._z.toFixed(2),dir=r._z>0?'↑':'↓',col=r._z>0?'var(--red)':'var(--blue)';
+    return `<div style="display:flex;align-items:center;gap:5px;padding:4px 0;border-bottom:1px solid var(--bg);cursor:pointer" onclick="openDrawerRow(${i})">
+      <span style="color:var(--faint);min-width:14px;font-size:.68rem">${i+1}.</span>
+      <span style="flex:1;font-weight:600;font-size:.74rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escH(r['Player']||r['Name']||'—')}</span>
+      <span style="color:${col};font-weight:700;font-size:.74rem">${dir}${r._value.toFixed(2)}</span>
+      <span style="color:${col};font-size:.68rem">z=${z}</span>
+    </div>`;
+  }).join('');
+}
+function openDrawerRow(i){openDrawerWithRow(anomalyRows[i])}
+
+/* ═══════════════════════════════════════
+   TABLE
+═══════════════════════════════════════ */
+function renderTable(rows,metric,zThresh){
+  const ml=loadedFiles.length>1;
+  const cols=['','Player','Team','Position','Age','Minutes',metric,'Pct','Z-Score','Type',...(ml?['League']:[])];
+  document.getElementById('tableHead').innerHTML=`<tr>${cols.map((c,i)=>`<th ${i>0?`onclick="sortTable(${i})"`:''} data-col="${i}">${escH(c)}</th>`).join('')}</tr>`;
+  renderTableBody(rows,metric,zThresh,ml);
+  document.getElementById('tableCount').textContent=`${rows.length} anomalies`;
+  document.getElementById('emptyState').style.display=rows.length?'none':'block';
+}
+function renderTableBody(rows,metric,zThresh,ml){
+  const tbody=document.getElementById('tableBody');
+  const cs=colStats[metric];
+  tbody.innerHTML=rows.map((r,idx)=>{
+    const z=r._z,v=r._value;
+    let cls='zc-n';
+    if(z>zThresh*1.5)cls='zc-ehi';else if(z>zThresh)cls='zc-hi';else if(z<-zThresh*1.5)cls='zc-elo';else if(z<-zThresh)cls='zc-lo';
+    const pct=cs?Math.round(cs.vals.filter(vv=>vv<=v).length/cs.vals.length*100):0;
+    const pc=pct>=80?'var(--red)':pct>=50?'var(--yellow)':'var(--blue)';
+    const name=r['Player']||r['Name']||'—';
+    const starred=isStarred(name);
+    const lc=leagueColors[r._league]||'var(--muted)';
+    return `<tr onclick="openDrawerWithRow(anomalyRows[${idx}])" class="${idx===selectedRow?'sel':''}">
+      <td><button class="star-btn${starred?' starred':''}" onclick="event.stopPropagation();toggleStar(this,'${escH(name).replace(/'/g,"\\'")}',${idx})" title="Shortlist">${starred?'★':'☆'}</button></td>
+      <td class="tp">${escH(name)}</td>
+      <td class="tt">${escH(r['Team']||'—')}</td>
+      <td class="tpos">${escH(r['Position']||'—')}</td>
+      <td class="tnum">${r['Age']??'—'}</td>
+      <td class="tnum">${r['Minutes played']!=null?Math.round(r['Minutes played']).toLocaleString():'—'}</td>
+      <td class="tnum" style="font-weight:600">${v.toFixed(2)}</td>
+      <td><div class="pb"><div class="pb-bg"><div class="pb-fill" style="width:${pct}%;background:${pc}"></div></div><span class="pb-lbl" style="color:${pc}">${pct}%</span></div></td>
+      <td class="tnum"><span class="zc ${cls}">${z>0?'+':''}${z.toFixed(2)}</span></td>
+      <td>${z>0?`<span class="tat-hi">High</span>`:`<span class="tat-lo">Low</span>`}</td>
+      ${ml?`<td style="font-size:.7rem;color:${lc}">● ${escH(r._league||'')}</td>`:''}
+    </tr>`;
+  }).join('');
+}
+let selectedRow=null;
+function filterTable(){
+  const q=document.getElementById('tableSearch').value.toLowerCase();
+  displayedRows=anomalyRows.filter(r=>(r['Player']||r['Name']||'').toLowerCase().includes(q)||(r['Team']||'').toLowerCase().includes(q)||(r._league||'').toLowerCase().includes(q));
+  renderTableBody(displayedRows,document.getElementById('metricSelect').value,parseFloat(document.getElementById('zThreshold').value)||2,loadedFiles.length>1);
+  document.getElementById('tableCount').textContent=`${displayedRows.length} anomalies`;
+}
+function sortTable(ci){
+  const metric=document.getElementById('metricSelect').value;
+  const keys=['_star','Player','Team','Position','Age','Minutes played',metric,'_pct','_z','_type','_league'];
+  const key=keys[ci]||'_z';
+  if(sortCol===ci)sortDir*=-1;else{sortCol=ci;sortDir=1}
+  document.querySelectorAll('thead th').forEach((th,i)=>{th.classList.remove('asc','desc');if(i===ci)th.classList.add(sortDir===1?'asc':'desc')});
+  const cs=colStats[metric];
+  displayedRows.sort((a,b)=>{
+    let av,bv;
+    if(key==='_z'){av=a._z;bv=b._z}
+    else if(key==='_pct'){av=cs?cs.vals.filter(v=>v<=parseFloat(a[metric])).length:0;bv=cs?cs.vals.filter(v=>v<=parseFloat(b[metric])).length:0}
+    else{av=a[key]??'';bv=b[key]??''}
+    if(typeof av==='number'&&typeof bv==='number')return(av-bv)*sortDir;
+    return String(av).localeCompare(String(bv))*sortDir;
+  });
+  renderTableBody(displayedRows,metric,parseFloat(document.getElementById('zThreshold').value)||2,loadedFiles.length>1);
+}
+
+/* ═══════════════════════════════════════
+   SCATTER
+═══════════════════════════════════════ */
+function drawScatter(){
+  const xK=document.getElementById('scX').value, yK=document.getElementById('scY').value;
+  const xD=document.getElementById('scXdir').value, yD=document.getElementById('scYdir').value;
+  const hl=document.getElementById('scHighlight').value.toLowerCase();
+  const zT=parseFloat(document.getElementById('zThreshold').value)||2;
+  if(!filteredRows.length){alert('Run analysis first');return}
+  const csX=colStats[xK],csY=colStats[yK]; if(!csX||!csY)return;
+  const pts=filteredRows.map(r=>{
+    const x=parseFloat(r[xK]),y=parseFloat(r[yK]);
+    if(isNaN(x)||isNaN(y))return null;
+    const zx=(x-csX.mean)/csX.std,zy=(y-csY.mean)/csY.std;
+    const ox=xD==='both'?Math.abs(zx)>=zT:xD==='high'?zx>=zT:xD==='low'?zx<=-zT:false;
+    const oy=yD==='both'?Math.abs(zy)>=zT:yD==='high'?zy>=zT:yD==='low'?zy<=-zT:false;
+    const name=(r['Player']||r['Name']||'?').toLowerCase();
+    const isHl=hl&&name.includes(hl);
+    let color='rgba(255,255,255,0.18)';
+    if(isHl)color='rgba(255,255,255,0.95)';
+    else if(ox&&oy)color='rgba(246,224,94,0.85)';
+    else if(ox)color='rgba(252,129,129,0.75)';
+    else if(oy)color='rgba(99,179,237,0.75)';
+    return{x,y,player:r['Player']||r['Name']||'?',team:r['Team']||'',league:r._league||'',color,zx,zy,r:isHl?7:(ox||oy?5:3),_row:r};
+  }).filter(Boolean);
+  const ctx=document.getElementById('scatterChart').getContext('2d');
+  if(scatterChartI)scatterChartI.destroy();
+  scatterChartI=new Chart(ctx,{type:'scatter',data:{datasets:[{data:pts.map(p=>({x:p.x,y:p.y})),backgroundColor:pts.map(p=>p.color),pointRadius:pts.map(p=>p.r),pointHoverRadius:8}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:item=>{const p=pts[item.dataIndex];return[`${p.player} (${p.team})`,`${xK}: ${p.x.toFixed(2)} (z=${p.zx.toFixed(1)})`,`${yK}: ${p.y.toFixed(2)} (z=${p.zy.toFixed(1)})`]}}}},
+    scales:{x:{title:{display:true,text:xK,color:'var(--muted)',font:{size:10}},ticks:{color:'#4a5568',font:{size:9}},grid:{color:'#1a1f2e'}},y:{title:{display:true,text:yK,color:'var(--muted)',font:{size:10}},ticks:{color:'#4a5568',font:{size:9}},grid:{color:'#1a1f2e'}}},
+    onClick:(e,els)=>{if(els.length)openDrawerWithRow(pts[els[0].index]._row)},animation:{duration:200}}});
+}
+
+/* ═══════════════════════════════════════
+   PARALLEL COORDINATES
+═══════════════════════════════════════ */
+function togglePcChip(el){
+  const m=el.dataset.m;
+  el.classList.toggle('sel');
+  pcSelectedMetrics=Array.from(document.querySelectorAll('.pc-chip.sel')).map(c=>c.dataset.m);
+}
+function drawParallelCoords(){
+  if(!filteredRows.length){alert('Run analysis first');return}
+  const metrics=pcSelectedMetrics.filter(m=>colStats[m]);
+  if(metrics.length<2){alert('Select at least 2 metrics');return}
+  const zT=parseFloat(document.getElementById('zThreshold').value)||2;
+  const W=Math.max(700,metrics.length*120),H=380,PAD={top:40,bottom:60,left:40,right:40};
+  const iW=W-PAD.left-PAD.right,iH=H-PAD.top-PAD.bottom;
+  const axisX=metrics.map((_,i)=>PAD.left+i*(iW/(metrics.length-1)));
+  // Normalize 0-1 per metric
+  function norm(row,m){const cs=colStats[m];if(!cs)return.5;const v=parseFloat(row[m]);if(isNaN(v))return null;return(v-cs.min)/(cs.max-cs.min||1)}
+  // Anomaly rows for selected metric
+  const anomSet=new Set(anomalyRows.map(r=>r['Player']||r['Name']));
+  const sample=filteredRows.length>2000?filteredRows.filter((_,i)=>i%Math.ceil(filteredRows.length/2000)===0):filteredRows;
+  let lines='';
+  // Normal lines first (faint)
+  sample.forEach(r=>{
+    const pts=metrics.map((m,i)=>{const n=norm(r,m);if(n===null)return null;return`${axisX[i]},${PAD.top+iH-(n*iH)}`});
+    if(pts.includes(null))return;
+    lines+=`<polyline points="${pts.join(' ')}" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>`;
+  });
+  // Anomaly lines on top (bright)
+  anomalyRows.forEach(r=>{
+    const pts=metrics.map((m,i)=>{const n=norm(r,m);if(n===null)return null;return`${axisX[i]},${PAD.top+iH-(n*iH)}`});
+    if(pts.includes(null))return;
+    const col=r._z>0?'rgba(252,129,129,0.75)':'rgba(99,179,237,0.75)';
+    const name=escH(r['Player']||r['Name']||'');
+    lines+=`<polyline points="${pts.join(' ')}" fill="none" stroke="${col}" stroke-width="1.5" opacity="0.85" data-name="${name}"/>`;
+  });
+  // Axes
+  let axes='';
+  metrics.forEach((m,i)=>{
+    const x=axisX[i];
+    const cs=colStats[m];
+    axes+=`<line x1="${x}" y1="${PAD.top}" x2="${x}" y2="${PAD.top+iH}" stroke="#2d3748" stroke-width="1.5"/>`;
+    axes+=`<text x="${x}" y="${PAD.top+iH+16}" text-anchor="middle" fill="#718096" font-size="10" transform="rotate(-25,${x},${PAD.top+iH+16})">${escH(m.length>18?m.slice(0,17)+'…':m)}</text>`;
+    axes+=`<text x="${x}" y="${PAD.top-6}" text-anchor="middle" fill="#4a5568" font-size="9">${cs?cs.max.toFixed(1):''}</text>`;
+    axes+=`<text x="${x}" y="${PAD.top+iH+6}" text-anchor="middle" fill="#4a5568" font-size="9" dy="0">${cs?cs.min.toFixed(1):''}</text>`;
+  });
+  const svg=document.getElementById('pcSvg');
+  svg.setAttribute('width',W);svg.setAttribute('height',H);svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  svg.innerHTML=`<rect width="${W}" height="${H}" fill="#0f1117" rx="8"/>${lines}${axes}`;
+  // Tooltip on polyline hover
+  const tip=document.getElementById('pcTooltip');
+  svg.querySelectorAll('polyline[data-name]').forEach(pl=>{
+    pl.addEventListener('mouseenter',e=>{tip.textContent=pl.dataset.name;tip.style.display='block';tip.style.left=(e.clientX+12)+'px';tip.style.top=(e.clientY-8)+'px'});
+    pl.addEventListener('mousemove',e=>{tip.style.left=(e.clientX+12)+'px';tip.style.top=(e.clientY-8)+'px'});
+    pl.addEventListener('mouseleave',()=>tip.style.display='none');
+  });
+}
+
+/* ═══════════════════════════════════════
+   BOX PLOTS
+═══════════════════════════════════════ */
+function drawBoxPlots(){
+  if(!filteredRows.length){alert('Run analysis first');return}
+  const metric=document.getElementById('metricSelect').value;
+  const leagues=[...new Set(filteredRows.map(r=>r._league))].filter(Boolean);
+  if(leagues.length<1){alert('Load multiple league files to see box plots');return}
+  const bpData=leagues.map(l=>{
+    const vals=filteredRows.filter(r=>r._league===l).map(r=>parseFloat(r[metric])).filter(v=>!isNaN(v)).sort((a,b)=>a-b);
+    if(!vals.length)return null;
+    const q1=vals[Math.floor(vals.length*.25)],med=vals[Math.floor(vals.length*.5)],q3=vals[Math.floor(vals.length*.75)];
+    const iqr=q3-q1,lo=q1-1.5*iqr,hi=q3+1.5*iqr;
+    const wLo=vals.find(v=>v>=lo)??vals[0],wHi=[...vals].reverse().find(v=>v<=hi)??vals[vals.length-1];
+    const outliers=vals.filter(v=>v<lo||v>hi);
+    return{league:l,q1,med,q3,wLo,wHi,outliers,n:vals.length,mean:vals.reduce((a,b)=>a+b,0)/vals.length};
+  }).filter(Boolean).sort((a,b)=>b.med-a.med);
+  const ROW=30,H=bpData.length*ROW+80,W=700,PAD={top:30,bottom:50,left:140,right:30};
+  const iW=W-PAD.left-PAD.right;
+  const allVals=bpData.flatMap(d=>[d.wLo,d.wHi]);
+  const mn=Math.min(...allVals),mx=Math.max(...allVals);
+  function scaleX(v){return PAD.left+(v-mn)/(mx-mn||1)*iW}
+  let boxes='',axis='';
+  // X axis ticks
+  for(let i=0;i<=5;i++){const v=mn+(mx-mn)*i/5;const x=scaleX(v);axis+=`<line x1="${x}" y1="${PAD.top}" x2="${x}" y2="${H-PAD.bottom}" stroke="#1a1f2e" stroke-width="1"/>`;axis+=`<text x="${x}" y="${H-PAD.bottom+16}" text-anchor="middle" fill="#4a5568" font-size="10">${v.toFixed(2)}</text>`}
+  bpData.forEach((d,i)=>{
+    const y=PAD.top+i*ROW+ROW/2;
+    const lc=leagueColors[d.league]||'#63b3ed';
+    const x1=scaleX(d.q1),x3=scaleX(d.q3),xm=scaleX(d.med),xl=scaleX(d.wLo),xh=scaleX(d.wHi),xmn=scaleX(d.mean);
+    boxes+=`<line x1="${xl}" y1="${y}" x2="${x1}" y2="${y}" stroke="${lc}" stroke-width="1" opacity="0.6"/>`;
+    boxes+=`<line x1="${x3}" y1="${y}" x2="${xh}" y2="${y}" stroke="${lc}" stroke-width="1" opacity="0.6"/>`;
+    boxes+=`<rect x="${x1}" y="${y-8}" width="${x3-x1}" height="16" fill="${lc}" fill-opacity="0.25" stroke="${lc}" stroke-width="1.5" rx="2"/>`;
+    boxes+=`<line x1="${xm}" y1="${y-8}" x2="${xm}" y2="${y+8}" stroke="${lc}" stroke-width="2"/>`;
+    boxes+=`<line x1="${xl}" y1="${y-4}" x2="${xl}" y2="${y+4}" stroke="${lc}" stroke-width="1.5"/>`;
+    boxes+=`<line x1="${xh}" y1="${y-4}" x2="${xh}" y2="${y+4}" stroke="${lc}" stroke-width="1.5"/>`;
+    boxes+=`<circle cx="${xmn}" cy="${y}" r="3" fill="${lc}" opacity="0.8"/>`;
+    d.outliers.slice(0,20).forEach(ov=>boxes+=`<circle cx="${scaleX(ov)}" cy="${y}" r="2.5" fill="${lc}" fill-opacity="0.5" stroke="${lc}" stroke-width="0.5"/>`);
+    boxes+=`<text x="${PAD.left-6}" y="${y+4}" text-anchor="end" fill="#a0aec0" font-size="10">${escH(d.league.length>18?d.league.slice(0,17)+'…':d.league)}</text>`;
+    boxes+=`<text x="${W-PAD.right+4}" y="${y+4}" fill="#4a5568" font-size="9">${d.n}</text>`;
+  });
+  const svg=document.getElementById('bpSvg');
+  svg.setAttribute('width',W);svg.setAttribute('height',H);svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  svg.innerHTML=`<rect width="${W}" height="${H}" fill="#0f1117" rx="8"/>${axis}${boxes}<text x="${W/2}" y="${H-8}" text-anchor="middle" fill="#4a5568" font-size="11">${escH(metric)}</text>`;
+}
+
+/* ═══════════════════════════════════════
+   TOP-N BAR CHART
+═══════════════════════════════════════ */
+let topnChartInst=null;
+function drawTopN(){
+  if(!filteredRows.length){alert('Run analysis first');return}
+  const metric=document.getElementById('topnMetric').value;
+  const dir=document.getElementById('topnDir').value;
+  const N=parseInt(document.getElementById('topnN').value)||20;
+  const cs=colStats[metric]; if(!cs)return;
+  let rows=[...filteredRows].filter(r=>!isNaN(parseFloat(r[metric]))).map(r=>({...r,_v:parseFloat(r[metric])}));
+  let datasets=[];
+  if(dir==='top'||dir==='both'){
+    const top=rows.sort((a,b)=>b._v-a._v).slice(0,N).reverse();
+    datasets.push({label:'Top',data:top.map(r=>r._v),backgroundColor:top.map(r=>leagueColors[r._league]||'#63b3ed'),_rows:top});
+    if(dir==='top'){renderTopNChart(datasets,top.map(r=>r['Player']||r['Name']||'?'),metric,cs);}
+  }
+  if(dir==='bottom'||dir==='both'){
+    const bot=rows.sort((a,b)=>a._v-b._v).slice(0,N).reverse();
+    datasets.push({label:'Bottom',data:bot.map(r=>r._v),backgroundColor:bot.map(r=>leagueColors[r._league]||'#fc8181'),_rows:bot});
+    if(dir==='bottom'){renderTopNChart(datasets,bot.map(r=>r['Player']||r['Name']||'?'),metric,cs)}
+  }
+  if(dir==='both'){
+    // Use top only for labels
+    const topR=[...filteredRows].filter(r=>!isNaN(parseFloat(r[metric]))).map(r=>({...r,_v:parseFloat(r[metric])})).sort((a,b)=>b._v-a._v).slice(0,N).reverse();
+    renderTopNChart([datasets[0]],topR.map(r=>r['Player']||r['Name']||'?'),metric,cs);
+  }
+}
+function renderTopNChart(datasets,labels,metric,cs){
+  const wrap=document.getElementById('topnWrap');
+  const h=Math.max(300,labels.length*22+80);
+  wrap.style.height=h+'px';
+  const ctx=document.getElementById('topnChart').getContext('2d');
+  if(topnChartInst)topnChartInst.destroy();
+  const zT=parseFloat(document.getElementById('zThreshold').value)||2;
+  const threshold=cs.mean+zT*cs.std;
+  topnChartInst=new Chart(ctx,{type:'bar',data:{labels,datasets:datasets.map(d=>({label:d.label,data:d.data,backgroundColor:d.backgroundColor,borderWidth:0,borderRadius:3,barThickness:14}))},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:item=>`${item.raw.toFixed(2)} (${item.dataset._rows?item.dataset._rows[item.dataIndex]?.['Team']||'':''})`,afterLabel:item=>{const v=item.raw;const z=(v-cs.mean)/cs.std;return[`z = ${z.toFixed(2)}`,item.dataset._rows?item.dataset._rows[item.dataIndex]?.['Position']||'':'']}}}},
+      scales:{x:{ticks:{color:'#4a5568',font:{size:10}},grid:{color:'#1a1f2e'},title:{display:true,text:metric,color:'var(--muted)',font:{size:10}}},
+        y:{ticks:{color:'#a0aec0',font:{size:10}},grid:{color:'transparent'}}},
+      onClick:(e,els)=>{if(els.length&&datasets[0]._rows){openDrawerWithRow(datasets[0]._rows[els[0].index])}},
+      animation:{duration:250}}});
+}
+
+/* ═══════════════════════════════════════
+
+/* ═══════════════════════════════════════
+   PLAYER DRAWER
+═══════════════════════════════════════ */
+function openDrawerWithRow(row){
+  currentDrawerRow=row;
+  const name=row['Player']||row['Name']||'—',team=row['Team']||'—',pos=row['Position']||'—',age=row['Age']||'—';
+  const mins=row['Minutes played'];const lc=leagueColors[row._league]||'var(--border2)';
+  document.getElementById('dName').textContent=name;
+  document.getElementById('dSub').textContent=`${team} · ${pos} · Age ${age} · ${mins!=null?Math.round(mins).toLocaleString():'-'} min`;
+  document.getElementById('dTags').innerHTML=[
+    row._league?`<span class="dtag" style="background:${lc}22;color:${lc}">${escH(row._league)}</span>`:'',
+    `<span class="dtag">${escH(pos)}</span>`,
+    row['Foot']?`<span class="dtag">${escH(row['Foot'])}</span>`:'',
+    row['Age']?`<span class="dtag">Age ${row['Age']}</span>`:'',
+  ].filter(Boolean).join('');
+  document.getElementById('drawerStar').className='star-btn'+(isStarred(name)?' starred':'');
+  document.getElementById('drawerStar').textContent=isStarred(name)?'★':'☆';
+  // Radar
+  const rm=RADAR_METRICS.filter(m=>colStats[m]);
+  const labels=rm.map(m=>m.replace(' per 90','').replace(', %','%').replace('Goal conversion','Conv%'));
+  const data=rm.map(m=>{const cs=colStats[m];if(!cs)return 50;const v=parseFloat(row[m]);if(isNaN(v))return 50;return Math.round(cs.vals.filter(vv=>vv<=v).length/cs.vals.length*100)});
+  const rctx=document.getElementById('radarChart').getContext('2d');
+  if(radarChartI)radarChartI.destroy();
+  radarChartI=new Chart(rctx,{type:'radar',data:{labels,datasets:[{data,fill:true,backgroundColor:'rgba(99,179,237,0.15)',borderColor:'rgba(99,179,237,0.8)',pointBackgroundColor:'rgba(99,179,237,1)',pointRadius:3}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:i=>`${i.raw}th pct`}}},
+    scales:{r:{min:0,max:100,ticks:{stepSize:25,color:'#4a5568',font:{size:9},backdropColor:'transparent'},grid:{color:'#1a1f2e'},pointLabels:{color:'#a0aec0',font:{size:9}},angleLines:{color:'#1a1f2e'}}},animation:{duration:200}}});
+  // Stat rows
+  const topM=numericCols.filter(m=>colStats[m]).slice(0,35);
+  document.getElementById('drawerStatRows').innerHTML=topM.map(m=>{
+    const cs=colStats[m],v=parseFloat(row[m]);if(!cs||isNaN(v))return'';
+    const pct=Math.round(cs.vals.filter(vv=>vv<=v).length/cs.vals.length*100);
+    const col=pct>=80?'var(--red)':pct>=50?'var(--green)':'var(--blue)';
+    return`<div class="srow"><span class="srow-name" title="${escH(m)}">${escH(m)}</span><span class="srow-val">${v.toFixed(2)}</span><div style="display:flex;align-items:center;gap:4px"><div class="srow-bar" style="width:55px"><div class="srow-fill" style="width:${pct}%;background:${col}"></div></div><span style="font-size:.67rem;color:${col};min-width:22px">${pct}%</span></div></div>`;
+  }).filter(Boolean).join('');
+  document.getElementById('drawerOverlay').classList.add('open');
+  document.getElementById('playerDrawer').classList.add('open');
+}
+function closeDrawer(){document.getElementById('drawerOverlay').classList.remove('open');document.getElementById('playerDrawer').classList.remove('open')}
+
+/* ═══════════════════════════════════════
+   SHORTLIST
+═══════════════════════════════════════ */
+function isStarred(name){return shortlist.some(p=>p.name===name)}
+function toggleStar(btn,name,idx){
+  if(isStarred(name)){shortlist=shortlist.filter(p=>p.name!==name);btn.className='star-btn';btn.textContent='☆'}
+  else{const r=anomalyRows[idx];shortlist.push({name,team:r['Team']||'',pos:r['Position']||'',league:r._league||'',z:r._z?.toFixed(2)||''});btn.className='star-btn starred';btn.textContent='★'}
+  saveShortlist();
+}
+function toggleStarCurrent(){
+  if(!currentDrawerRow)return;
+  const name=currentDrawerRow['Player']||currentDrawerRow['Name']||'';
+  const btn=document.getElementById('drawerStar');
+  if(isStarred(name)){shortlist=shortlist.filter(p=>p.name!==name);btn.className='star-btn';btn.textContent='☆'}
+  else{shortlist.push({name,team:currentDrawerRow['Team']||'',pos:currentDrawerRow['Position']||'',league:currentDrawerRow._league||''});btn.className='star-btn starred';btn.textContent='★'}
+  saveShortlist();
+}
+function saveShortlist(){
+  localStorage.setItem('wyscout_shortlist',JSON.stringify(shortlist));
+  document.getElementById('shortlistCount').textContent=shortlist.length;
+  document.getElementById('shortlistCountPanel').textContent=`${shortlist.length} players`;
+  renderShortlistTab();
+}
+function renderShortlistTab(){
+  const el=document.getElementById('shortlistContent');
+  if(!shortlist.length){el.innerHTML='<div class="shortlist-empty">⭐ No players shortlisted yet.<br>Click ☆ in any player drawer to add them.</div>';return}
+  el.innerHTML=`<div class="tscroll"><table><thead><tr><th>Player</th><th>Team</th><th>Position</th><th>League</th><th>Z-Score</th><th></th></tr></thead><tbody>${shortlist.map((p,i)=>`<tr><td class="tp">${escH(p.name)}</td><td class="tt">${escH(p.team)}</td><td class="tpos">${escH(p.pos)}</td><td style="font-size:.72rem;color:var(--muted)">${escH(p.league)}</td><td class="tnum" style="color:var(--yellow)">${p.z?p.z:''}</td><td><button class="btn-xs btn-red btn" onclick="removeFromShortlist(${i})" style="width:auto">✕</button></td></tr>`).join('')}</tbody></table></div>`;
+}
+function removeFromShortlist(i){shortlist.splice(i,1);saveShortlist()}
+function clearShortlist(){shortlist=[];saveShortlist()}
+function exportShortlist(){
+  if(!shortlist.length)return;
+  const rows=shortlist.map(p=>`"${p.name}","${p.team}","${p.pos}","${p.league}","${p.z}"`);
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([['Player,Team,Position,League,Z-Score',...rows].join('\n')],{type:'text/csv'}));a.download='shortlist.csv';a.click();
+}
+// Init
+document.getElementById('shortlistCount').textContent=shortlist.length;
+renderShortlistTab();
+
+/* ═══════════════════════════════════════
+   COMPARE PLAYERS
+═══════════════════════════════════════ */
+function addToCompare(){
+  if(!currentDrawerRow)return;
+  if(comparePlayers.length>=3){alert('Max 3 players');return}
+  const name=currentDrawerRow['Player']||currentDrawerRow['Name']||'?';
+  if(comparePlayers.find(p=>(p['Player']||p['Name'])===name))return;
+  comparePlayers.push(currentDrawerRow);
+  renderCompareSlots();
+}
+function clearCompare(){comparePlayers=[];renderCompareSlots()}
+function renderCompareSlots(){
+  document.getElementById('compareSlots').innerHTML=comparePlayers.map((r,i)=>`<div class="cmp-slot filled" onclick="openDrawerWithRow(comparePlayers[${i}])">${escH(r['Player']||r['Name']||'?')} <button onclick="event.stopPropagation();comparePlayers.splice(${i},1);renderCompareSlots()" style="background:none;border:none;color:var(--faint);cursor:pointer;font-size:.75rem">✕</button></div>`).join('')+
+    (comparePlayers.length<3?'<div class="cmp-slot">+ slot</div>':'');
+}
+renderCompareSlots();
+function runCompare(){
+  if(comparePlayers.length<2){alert('Add at least 2 players');return}
+  switchTab('compare',document.querySelector('[data-tab=compare]'));
+  const rm=RADAR_METRICS.filter(m=>colStats[m]);
+  const labels=rm.map(m=>m.replace(' per 90','').replace(', %','%').replace('Goal conversion','Conv%'));
+  const COLORS=['#63b3ed','#68d391','#f6e05e'];
+  const datasets=comparePlayers.map((row,i)=>({
+    label:row['Player']||row['Name']||'?',
+    data:rm.map(m=>{const cs=colStats[m];if(!cs)return 50;const v=parseFloat(row[m]);if(isNaN(v))return 50;return Math.round(cs.vals.filter(vv=>vv<=v).length/cs.vals.length*100)}),
+    fill:true,backgroundColor:COLORS[i]+'28',borderColor:COLORS[i]+'cc',pointBackgroundColor:COLORS[i],pointRadius:3,
+  }));
+  const ctx=document.getElementById('compareRadar').getContext('2d');
+  if(compareRadarI)compareRadarI.destroy();
+  compareRadarI=new Chart(ctx,{type:'radar',data:{labels,datasets},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#a0aec0',font:{size:11}},position:'bottom'}},scales:{r:{min:0,max:100,ticks:{stepSize:25,color:'#4a5568',font:{size:9},backdropColor:'transparent'},grid:{color:'#1a1f2e'},pointLabels:{color:'#a0aec0',font:{size:9}},angleLines:{color:'#1a1f2e'}}},animation:{duration:200}}});
+  // Comparison table
+  const cols=numericCols.filter(m=>colStats[m]).slice(0,20);
+  let tbl=`<div class="tscroll"><table><thead><tr><th>Metric</th>${comparePlayers.map(r=>`<th>${escH(r['Player']||r['Name']||'?')}</th>`).join('')}</tr></thead><tbody>`;
+  cols.forEach(m=>{
+    const vals=comparePlayers.map(r=>{const v=parseFloat(r[m]);return isNaN(v)?null:v});
+    const maxVal=Math.max(...vals.filter(v=>v!==null));
+    tbl+=`<tr><td class="srow-name">${escH(m)}</td>${vals.map(v=>`<td class="tnum" style="${v===maxVal&&comparePlayers.length>1?'color:var(--green);font-weight:700':''}">${v!=null?v.toFixed(2):'—'}</td>`).join('')}</tr>`;
+  });
+  tbl+='</tbody></table></div>';
+  document.getElementById('compareTable').innerHTML=tbl;
+}
+
+/* ═══════════════════════════════════════
+   COMBOS
+═══════════════════════════════════════ */
+function zFor(row,col){const cs=colStats[col];if(!cs)return 0;const v=parseFloat(row[col]);if(isNaN(v))return 0;return(v-cs.mean)/cs.std}
+function comboMatch(rows,m1,d1,m2,d2,z){return rows.filter(r=>{const z1=zFor(r,m1),z2=zFor(r,m2);return(d1==='high'?z1>=z:z1<=-z)&&(d2==='high'?z2>=z:z2<=-z)})}
+function addCustomCombo(){
+  customCombos.push({title:'Custom Pattern',desc:`${document.getElementById('cb1m').value} (${document.getElementById('cb1d').value}) + ${document.getElementById('cb2m').value} (${document.getElementById('cb2d').value})`,color:'#a0aec0',m1:document.getElementById('cb1m').value,d1:document.getElementById('cb1d').value,m2:document.getElementById('cb2m').value,d2:document.getElementById('cb2d').value,z:1.5,custom:true});
+  renderAllCombos();
+}
+function renderAllCombos(){
+  if(!filteredRows.length)return;
+  const all=[...PRESET_COMBOS,...customCombos];
+  document.getElementById('comboGrid').innerHTML=all.map((def,idx)=>{
+    const m=comboMatch(filteredRows,def.m1,def.d1,def.m2,def.d2,def.z||1.5);
+    if(!m.length)return'';
+    const top3=m.slice(0,3).map(r=>escH(r['Player']||r['Name']||'?')).join(', ');
+    return`<div class="ccard">${def.custom?`<button class="cc-rm" onclick="customCombos.splice(${idx-PRESET_COMBOS.length},1);renderAllCombos()">✕ remove</button>`:''}<div class="cc-t" style="color:${def.color}">${escH(def.title)}</div><div class="cc-d">${escH(def.desc)}</div><div class="cc-n" style="color:${def.color}">${m.length}</div><div class="cc-p">Top: ${top3}${m.length>3?` +${m.length-3} more`:''}</div></div>`;
+  }).filter(Boolean).join('');
+  if(!document.getElementById('comboGrid').innerHTML)document.getElementById('comboGrid').innerHTML='<div style="color:var(--faint);font-size:.8rem">No combo anomalies found. Run analysis first.</div>';
+}
+
+/* ═══════════════════════════════════════
+   TABS
+═══════════════════════════════════════ */
+function switchTab(name,btn){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  document.getElementById('tab-'+name).classList.add('active');
+  if(name==='scatter'&&filteredRows.length)drawScatter();
+  if(name==='parallel'&&filteredRows.length)drawParallelCoords();
+  if(name==='boxplot'&&filteredRows.length)drawBoxPlots();
+  if(name==='topn'&&filteredRows.length)drawTopN();
+  if(name==='combos')renderAllCombos();
+  if(name==='shortlist')renderShortlistTab();
+  if(name==='scores')initScoreUI();
+  if(name==='similar'){initSimUI();}
+}
+
+/* ═══════════════════════════════════════
+   EXPORT
+═══════════════════════════════════════ */
+function exportCSV(){
+  if(!displayedRows.length)return;
+  const metric=document.getElementById('metricSelect').value;
+  const keys=['Player','Team','Position','Age','Minutes played',metric,'_z','_league'];
+  const header=keys.map(k=>k==='_z'?'Z-Score':k==='_league'?'League':k).join(',');
+  const rows=displayedRows.map(r=>keys.map(k=>`"${String(k==='_z'?r._z?.toFixed(3)??'':r[k]??'').replace(/"/g,'""')}"`).join(','));
+  dl([header,...rows].join('\n'),'anomalies.csv','text/csv');
+}
+function exportChart(id){const c=document.getElementById(id);if(!c)return;dl(c.toDataURL('image/png'),'chart.png','image/png',true)}
+function exportCanvas(id){exportChart(id)}
+function exportSVG(id,fn){const el=document.getElementById(id);if(!el)return;const s=new XMLSerializer().serializeToString(el);dl('data:image/svg+xml;charset=utf-8,'+encodeURIComponent(s),fn,'image/svg+xml',true)}
+function dl(data,filename,type,isDataUrl=false){const a=document.createElement('a');if(isDataUrl){a.href=data}else{a.href=URL.createObjectURL(new Blob([data],{type}))}a.download=filename;a.click()}
+
+/* ═══════════════════════════════════════
+   LEAGUE TIER MAP  (file-name → tier 1-6)
+   Populated from Leagues Overview if loaded,
+   otherwise falls back to manual overrides.
+═══════════════════════════════════════ */
+const MANUAL_TIERS={
+  'England':'1','Spain':'1','Germany':'1','Italy':'1','France':'1','Netherlands':'1','Portugal':'1',
+  'Belgium':'1','Turkey':'1','Russia':'1','Scotland':'1','Greece':'1','Czech Republic':'1','Austria':'1',
+  'England II':'2','Spain II':'2','Germany II':'2','Italy II':'2','France II':'2','Netherlands II':'2',
+  'Portugal II':'2','Belgium II':'2','Turkey II':'2',
+  'Germany 3':'3','England III':'3','Spain III':'3','Italy III':'3','France III':'3',
+  'Germany 4':'4','England IV':'4',
+};
+function getTier(league){
+  const t=MANUAL_TIERS[league];
+  if(t)return parseInt(t);
+  // rough heuristic: look for roman numerals or numbers
+  const m=league.match(/\b(II|III|IV|V|VI|2|3|4|5|6)\b/);
+  if(m){const s=m[1];if(s==='II'||s==='2')return 2;if(s==='III'||s==='3')return 3;if(s==='IV'||s==='4')return 4;if(s==='V'||s==='5')return 5;if(s==='VI'||s==='6')return 6;}
+  return 1;
+}
+function tierMultiplier(league,mode){
+  if(mode==='none')return 1;
+  const tier=getTier(league);
+  const step=mode==='soft'?0.95:0.90;
+  return Math.pow(step,tier-1);
+}
+
+/* ═══════════════════════════════════════
+   COMPOSITE SCORE BUILDER
+═══════════════════════════════════════ */
+const POSITION_PROFILES=[
+  {name:'⚽ Centre Forward',icon:'⚽',metrics:[
+    {m:'Non-penalty goals per 90',w:20},{m:'xG per 90',w:15},{m:'Goal conversion, %',w:10},
+    {m:'Shots on target, %',w:8},{m:'Touches in box per 90',w:12},{m:'Shots per 90',w:8},
+    {m:'xA per 90',w:7},{m:'Assists per 90',w:5},{m:'Dribbles per 90',w:5},
+    {m:'Aerial duels won, %',w:10}]},
+  {name:'🎯 Complete Forward',icon:'🎯',metrics:[
+    {m:'Non-penalty goals per 90',w:15},{m:'xG per 90',w:10},{m:'xA per 90',w:12},
+    {m:'Key passes per 90',w:10},{m:'Assists per 90',w:8},{m:'Dribbles per 90',w:10},
+    {m:'Successful dribbles, %',w:8},{m:'Touches in box per 90',w:10},{m:'Progressive runs per 90',w:10},{m:'Shots per 90',w:7}]},
+  {name:'🏃 Wide Forward',icon:'🏃',metrics:[
+    {m:'Dribbles per 90',w:18},{m:'Successful dribbles, %',w:12},{m:'xA per 90',w:15},
+    {m:'Key passes per 90',w:10},{m:'Progressive runs per 90',w:15},{m:'Goals per 90',w:12},
+    {m:'Crosses per 90',w:8},{m:'Accurate crosses, %',w:5},{m:'Touches in box per 90',w:5}]},
+  {name:'🕹 Attacking Midfielder',icon:'🕹',metrics:[
+    {m:'xA per 90',w:18},{m:'Key passes per 90',w:15},{m:'Assists per 90',w:10},
+    {m:'Smart passes per 90',w:8},{m:'Passes to final third per 90',w:8},{m:'Through passes per 90',w:8},
+    {m:'Dribbles per 90',w:8},{m:'Goals per 90',w:10},{m:'Progressive passes per 90',w:8},{m:'Shot assists per 90',w:7}]},
+  {name:'⚙️ Box-to-Box Midfielder',icon:'⚙️',metrics:[
+    {m:'Passes per 90',w:10},{m:'Accurate passes, %',w:8},{m:'Progressive passes per 90',w:12},
+    {m:'Defensive duels per 90',w:10},{m:'Defensive duels won, %',w:10},{m:'Interceptions per 90',w:10},
+    {m:'Goals per 90',w:8},{m:'xA per 90',w:8},{m:'Progressive runs per 90',w:12},{m:'Duels won, %',w:12}]},
+  {name:'🛡 Ball-Playing CB',icon:'🛡',metrics:[
+    {m:'Accurate passes, %',w:12},{m:'Long passes per 90',w:10},{m:'Accurate long passes, %',w:10},
+    {m:'Progressive passes per 90',w:12},{m:'Defensive duels won, %',w:15},{m:'Aerial duels won, %',w:15},
+    {m:'Interceptions per 90',w:10},{m:'Sliding tackles per 90',w:8},{m:'Accurate forward passes, %',w:8}]},
+  {name:'🔥 Pressing Forward',icon:'🔥',metrics:[
+    {m:'Defensive duels per 90',w:20},{m:'Defensive duels won, %',w:15},{m:'Fouls suffered per 90',w:10},
+    {m:'Successful attacking actions per 90',w:15},{m:'Dribbles per 90',w:10},
+    {m:'Touches in box per 90',w:10},{m:'Goals per 90',w:10},{m:'xG per 90',w:10}]},
+  {name:'🧤 Goalkeeper',icon:'🧤',metrics:[
+    {m:'Save rate, %',w:30},{m:'Prevented goals per 90',w:25},{m:'Exits per 90',w:15},
+    {m:'Accurate long passes, %',w:10},{m:'Back passes received as GK per 90',w:10},{m:'xG against per 90',w:10}]},
+];
+
+let scoreMetricRows=[];  // [{metric, weight}]
+let scoreResults=[];
+let scoreBarChartI=null;
+let savedProfiles=JSON.parse(localStorage.getItem('wyscout_profiles')||'[]');
+
+function initScoreUI(){
+  renderProfileLibrary();
+  // populate add-metric dropdown
+  const sel=document.getElementById('scoreAddMetric');
+  if(sel&&numericCols.length){sel.innerHTML=numericCols.map(m=>`<option value="${escH(m)}">${escH(m)}</option>`).join('')}
+}
+
+function renderProfileLibrary(){
+  const all=[...POSITION_PROFILES,...savedProfiles.map(p=>({...p,custom:true}))];
+  document.getElementById('profileLibrary').innerHTML=all.map((p,i)=>`
+    <div style="display:flex;align-items:center;gap:8px;background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:7px 10px;cursor:pointer" onclick="loadProfile(${i})">
+      <span style="font-size:1rem">${p.icon||'📋'}</span>
+      <span style="flex:1;font-size:.78rem;font-weight:600">${escH(p.name)}</span>
+      <span style="font-size:.68rem;color:var(--faint)">${p.metrics.length} metrics</span>
+      ${p.custom?`<button class="btn-xs" style="background:none;border:none;color:var(--faint);cursor:pointer" onclick="event.stopPropagation();deleteProfile(${POSITION_PROFILES.length+(i-POSITION_PROFILES.length)})">✕</button>`:''}
+    </div>`).join('');
+}
+
+function loadProfile(i){
+  const all=[...POSITION_PROFILES,...savedProfiles];
+  const p=all[i]; if(!p)return;
+  document.getElementById('scoreName').value=p.name;
+  scoreMetricRows=p.metrics.map(m=>({...m}));
+  renderScoreMetricRows();
+}
+
+function addScoreMetricRow(){
+  const m=document.getElementById('scoreAddMetric').value; if(!m)return;
+  if(scoreMetricRows.find(r=>r.m===m))return;
+  scoreMetricRows.push({m,w:10});
+  renderScoreMetricRows();
+  normaliseWeights();
+}
+
+function renderScoreMetricRows(){
+  const total=scoreMetricRows.reduce((s,r)=>s+r.w,0)||1;
+  document.getElementById('scoreMetricRows').innerHTML=scoreMetricRows.map((r,i)=>`
+    <div style="display:flex;align-items:center;gap:6px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:5px 8px">
+      <span style="flex:1;font-size:.72rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escH(r.m)}">${escH(r.m.length>28?r.m.slice(0,27)+'…':r.m)}</span>
+      <input type="number" value="${r.w}" min="1" max="100" style="width:52px;background:var(--bg);border:1px solid var(--border2);border-radius:4px;color:var(--text);padding:3px 5px;font-size:.75rem;text-align:right" onchange="scoreMetricRows[${i}].w=parseFloat(this.value)||1;renderScoreMetricRows()">
+      <span style="font-size:.68rem;color:var(--faint);min-width:28px">${Math.round(r.w/total*100)}%</span>
+      <button style="background:none;border:none;color:var(--faint);cursor:pointer;font-size:.85rem" onclick="scoreMetricRows.splice(${i},1);renderScoreMetricRows()">✕</button>
+    </div>`).join('');
+}
+
+function normaliseWeights(){
+  const t=scoreMetricRows.reduce((s,r)=>s+r.w,0);
+  if(t>0) scoreMetricRows.forEach(r=>r.w=Math.round(r.w/t*100));
+  renderScoreMetricRows();
+}
+
+function clearScoreBuilder(){scoreMetricRows=[];document.getElementById('scoreName').value='';renderScoreMetricRows()}
+
+function computeScore(){
+  if(!filteredRows.length){alert('Run analysis first');return}
+  if(!scoreMetricRows.length){alert('Add at least one metric');return}
+  const name=document.getElementById('scoreName').value.trim()||'Score';
+  const norm=document.getElementById('scoreNorm').value;
+  const tierAdj=document.getElementById('scoreTierAdj').value;
+
+  // Build per-metric stats on filtered set
+  const metStats={};
+  scoreMetricRows.forEach(({m})=>{
+    const vals=filteredRows.map(r=>parseFloat(r[m])).filter(v=>!isNaN(v)).sort((a,b)=>a-b);
+    if(!vals.length)return;
+    const mean=vals.reduce((a,b)=>a+b,0)/vals.length;
+    const std=Math.sqrt(vals.reduce((a,b)=>a+(b-mean)**2,0)/vals.length)||1;
+    metStats[m]={mean,std,vals,min:vals[0],max:vals[vals.length-1]};
+  });
+
+  const total=scoreMetricRows.reduce((s,r)=>s+r.w,0)||1;
+
+  scoreResults=filteredRows.map(r=>{
+    let score=0,covered=0;
+    scoreMetricRows.forEach(({m,w})=>{
+      const cs=metStats[m]; if(!cs)return;
+      const v=parseFloat(r[m]); if(isNaN(v))return;
+      let s0;
+      if(norm==='percentile'){
+        s0=cs.vals.filter(vv=>vv<=v).length/cs.vals.length*100;
+      } else {
+        const z=Math.max(-3,Math.min(3,(v-cs.mean)/cs.std));
+        s0=(z+3)/6*100;
+      }
+      score+=s0*(w/total);
+      covered+=w;
+    });
+    if(covered<total*.5){return null} // skip if <50% metrics present
+    score=covered<total?score*(total/covered):score;
+    const mult=tierMultiplier(r._league||'',tierAdj);
+    score=Math.min(100,score*mult);
+    return{...r,_score:score};
+  }).filter(Boolean).sort((a,b)=>b._score-a._score);
+
+  // Write back as column so it appears in exports
+  const colName=`[${name}]`;
+  scoreResults.forEach((r,i)=>{r._rank=i+1;allRows.filter(ar=>(ar['Player']||ar['Name'])===r['Player']).forEach(ar=>ar[colName]=r._score.toFixed(1))});
+  if(!numericCols.includes(colName)){numericCols.push(colName);['metricSelect','scX','scY','topnMetric'].forEach(id=>{const el=document.getElementById(id);if(el)el.add(new Option(colName,colName))})}
+
+  document.getElementById('scoreResultTitle').textContent=`${name} — ${scoreResults.length} players`;
+  renderScoreBar(scoreResults.slice(0,30),name);
+  renderScoreTable(scoreResults);
+}
+
+function renderScoreBar(rows,name){
+  const ctx=document.getElementById('scoreBarChart').getContext('2d');
+  if(scoreBarChartI)scoreBarChartI.destroy();
+  scoreBarChartI=new Chart(ctx,{type:'bar',
+    data:{labels:rows.map(r=>r['Player']||r['Name']||'?'),
+    datasets:[{data:rows.map(r=>r._score.toFixed(1)),
+      backgroundColor:rows.map(r=>{const s=r._score;return s>=80?'#fc8181cc':s>=60?'#f6e05ecc':s>=40?'#68d391cc':'#63b3edcc'}),
+      borderWidth:0,borderRadius:3,barThickness:12}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:i=>`${parseFloat(i.raw).toFixed(1)} / 100 · ${rows[i.dataIndex]['Team']||''}`}}},
+      scales:{x:{min:0,max:100,ticks:{color:'#4a5568',font:{size:9}},grid:{color:'#1a1f2e'},title:{display:true,text:name,color:'var(--muted)',font:{size:9}}},y:{ticks:{color:'#a0aec0',font:{size:9}},grid:{color:'transparent'}}},
+      onClick:(e,els)=>{if(els.length)openDrawerWithRow(rows[els[0].index])},
+      animation:{duration:200}}});
+}
+
+function renderScoreTable(rows){
+  document.getElementById('scoreTableBody').innerHTML=rows.map((r,i)=>{
+    const lc=leagueColors[r._league]||'var(--muted)';
+    const s=r._score;
+    const bar=`<div style="display:flex;align-items:center;gap:5px"><div style="flex:1;height:4px;background:var(--border2);border-radius:2px"><div style="width:${s}%;height:100%;background:${s>=80?'var(--red)':s>=60?'var(--yellow)':'var(--green)'};border-radius:2px"></div></div><span style="font-size:.72rem;font-weight:700;min-width:32px;text-align:right;color:${s>=80?'var(--red)':s>=60?'var(--yellow)':'var(--green)'}">${s.toFixed(1)}</span></div>`;
+    return`<tr onclick="openDrawerWithRow(scoreResults[${i}])"><td><button class="star-btn${isStarred(r['Player']||r['Name']||'')?' starred':''}" onclick="event.stopPropagation();toggleStarByName('${escH((r['Player']||r['Name']||'').replace(/'/g,"\\'"))}',r)">${isStarred(r['Player']||r['Name']||'')?'★':'☆'}</button></td>
+    <td class="tnum" style="color:var(--faint)">${i+1}</td>
+    <td class="tp">${escH(r['Player']||r['Name']||'—')}</td>
+    <td class="tt">${escH(r['Team']||'—')}</td>
+    <td class="tpos">${escH(r['Position']||'—')}</td>
+    <td style="font-size:.7rem;color:${lc}">● ${escH(r._league||'')}</td>
+    <td style="min-width:120px">${bar}</td></tr>`;
+  }).join('');
+}
+
+function sortScoreTable(key){
+  const map={rank:'_rank',name:'Player',team:'Team',pos:'Position',league:'_league',score:'_score'};
+  const k=map[key]||'_score';
+  scoreResults.sort((a,b)=>{const av=a[k]??'',bv=b[k]??'';if(typeof av==='number'&&typeof bv==='number')return bv-av;return String(av).localeCompare(String(bv))});
+  scoreResults.forEach((r,i)=>r._rank=i+1);
+  renderScoreTable(scoreResults);
+}
+
+function saveScoreAsProfile(){
+  if(!scoreMetricRows.length){alert('Add metrics first');return}
+  const name=document.getElementById('scoreName').value.trim()||'Custom Profile';
+  savedProfiles.push({name,icon:'📐',metrics:scoreMetricRows.map(r=>({...r}))});
+  localStorage.setItem('wyscout_profiles',JSON.stringify(savedProfiles));
+  renderProfileLibrary();
+}
+
+function deleteProfile(i){savedProfiles.splice(i-POSITION_PROFILES.length,1);localStorage.setItem('wyscout_profiles',JSON.stringify(savedProfiles));renderProfileLibrary()}
+
+function exportScoreTable(){
+  if(!scoreResults.length)return;
+  const keys=['Player','Team','Position','_league','_score','_rank'];
+  const hdr='Player,Team,Position,League,Score,Rank';
+  const rows=scoreResults.map(r=>keys.map(k=>`"${String(r[k]??'').replace(/"/g,'""')}"`).join(','));
+  dl([hdr,...rows].join('\n'),`scores_${new Date().toISOString().slice(0,10)}.csv`,'text/csv');
+}
+
+function toggleStarByName(name){
+  if(isStarred(name)){shortlist=shortlist.filter(p=>p.name!==name)}
+  else{const r=allRows.find(row=>(row['Player']||row['Name']||'')===name)||{};shortlist.push({name,team:r['Team']||'',pos:r['Position']||'',league:r._league||''})}
+  saveShortlist();
+}
+
+/* ═══════════════════════════════════════
+   SIMILAR PLAYER FINDER
+═══════════════════════════════════════ */
+const KEY_METRICS=['Goals per 90','xG per 90','xA per 90','Assists per 90','Shots per 90',
+  'Shots on target, %','Goal conversion, %','Touches in box per 90','Dribbles per 90',
+  'Successful dribbles, %','Aerial duels won, %','Key passes per 90','Progressive runs per 90',
+  'Defensive duels per 90','Defensive duels won, %'];
+
+let simSelectedMetrics=[...KEY_METRICS];
+let simResults=[];
+let simRadarI=null;
+let simRefRow=null;
+
+document.getElementById('simMetricSet').addEventListener('change',function(){
+  document.getElementById('simCustomMetrics').style.display=this.value==='custom'?'block':'none';
+  if(this.value==='key')simSelectedMetrics=[...KEY_METRICS];
+  else if(this.value==='all')simSelectedMetrics=[...numericCols];
+});
+
+function initSimUI(){
+  document.getElementById('simMetricChips').innerHTML=numericCols.filter(m=>colStats[m]).slice(0,30).map(m=>`<span class="pc-chip${KEY_METRICS.includes(m)?' sel':''}" data-m="${escH(m)}" onclick="toggleSimChip(this)">${escH(m)}</span>`).join('');
+}
+
+function toggleSimChip(el){
+  const m=el.dataset.m; el.classList.toggle('sel');
+  simSelectedMetrics=Array.from(document.querySelectorAll('#simMetricChips .pc-chip.sel')).map(c=>c.dataset.m);
+}
+
+function simPlayerSuggest(){
+  const q=document.getElementById('simPlayerInput').value.toLowerCase().trim();
+  const box=document.getElementById('simPlayerSuggestions');
+  if(!q||q.length<2){box.style.display='none';return}
+  const pool=document.getElementById('simPool').value==='filtered'?filteredRows:allRows;
+  const matches=[...new Map(pool.filter(r=>(r['Player']||r['Name']||'').toLowerCase().includes(q)).slice(0,8).map(r=>[r['Player']||r['Name'],r])).values()];
+  if(!matches.length){box.style.display='none';return}
+  box.style.display='block';
+  box.innerHTML=matches.map(r=>`<div style="padding:6px 10px;cursor:pointer;font-size:.78rem;border-bottom:1px solid var(--border)" onmousedown="selectSimRef(event)" data-name="${escH(r['Player']||r['Name']||'')}">
+    <span style="font-weight:600">${escH(r['Player']||r['Name']||'')}</span>
+    <span style="color:var(--muted);margin-left:6px">${escH(r['Team']||'')} · ${escH(r['Position']||'')} · ${escH(r._league||'')}</span>
+  </div>`).join('');
+}
+
+function selectSimRef(e){
+  const name=e.currentTarget.dataset.name;
+  document.getElementById('simPlayerInput').value=name;
+  document.getElementById('simPlayerSuggestions').style.display='none';
+  const pool=document.getElementById('simPool').value==='filtered'?filteredRows:allRows;
+  simRefRow=pool.find(r=>(r['Player']||r['Name']||'')===name)||null;
+  if(simRefRow){
+    document.getElementById('simRefCard').style.display='block';
+    document.getElementById('simRefName').textContent=name;
+    document.getElementById('simRefSub').textContent=`${simRefRow['Team']||''} · ${simRefRow['Position']||''} · ${simRefRow._league||''}`;
+  }
+}
+
+function findSimilar(){
+  if(!simRefRow){alert('Select a reference player first');return}
+  const pool=(document.getElementById('simPool').value==='filtered'?filteredRows:allRows).filter(r=>(r['Player']||r['Name'])!==(simRefRow['Player']||simRefRow['Name']));
+  const metSet=document.getElementById('simMetricSet').value;
+  let metrics;
+  if(metSet==='custom') metrics=simSelectedMetrics;
+  else if(metSet==='all') metrics=numericCols.filter(m=>colStats[m]);
+  else metrics=KEY_METRICS.filter(m=>colStats[m]);
+  if(!metrics.length){alert('No valid metrics');return}
+
+  // Normalise using colStats (z-score)
+  function normVal(row,m){
+    const cs=colStats[m]||colStats[m]; if(!cs)return null;
+    const v=parseFloat(row[m]); if(isNaN(v))return null;
+    return(v-cs.mean)/cs.std;
+  }
+
+  const refVals=metrics.map(m=>normVal(simRefRow,m));
+  const N=parseInt(document.getElementById('simN').value)||15;
+
+  simResults=pool.map(r=>{
+    let dist=0,count=0;
+    metrics.forEach((m,i)=>{
+      const rv=refVals[i],cv=normVal(r,m);
+      if(rv===null||cv===null)return;
+      dist+=(rv-cv)**2; count++;
+    });
+    if(count<metrics.length*.4)return null;
+    const sim=Math.max(0,100-Math.sqrt(dist/count)*20);
+    return{...r,_sim:sim,_dist:dist};
+  }).filter(Boolean).sort((a,b)=>b._sim-a._sim).slice(0,N);
+
+  document.getElementById('simEmpty').style.display='none';
+  document.getElementById('simResultTitle').textContent=`Players similar to ${simRefRow['Player']||simRefRow['Name']} (${simResults.length})`;
+  renderSimTable();
+  drawSimRadar(simResults.slice(0,3),metrics);
+}
+
+function renderSimTable(){
+  document.getElementById('simTableBody').innerHTML=simResults.map((r,i)=>{
+    const sim=r._sim;
+    const lc=leagueColors[r._league]||'var(--muted)';
+    const bar=`<div style="display:flex;align-items:center;gap:5px"><div style="width:80px;height:4px;background:var(--border2);border-radius:2px"><div style="width:${sim}%;height:100%;background:var(--green);border-radius:2px"></div></div><span style="font-size:.72rem;font-weight:700;color:var(--green)">${sim.toFixed(0)}%</span></div>`;
+    return`<tr onclick="openDrawerWithRow(simResults[${i}])">
+      <td class="tnum" style="color:var(--faint)">${i+1}</td>
+      <td class="tp">${escH(r['Player']||r['Name']||'—')}</td>
+      <td class="tt">${escH(r['Team']||'—')}</td>
+      <td class="tpos">${escH(r['Position']||'—')}</td>
+      <td style="font-size:.7rem;color:${lc}">● ${escH(r._league||'')}</td>
+      <td>${bar}</td>
+      <td><button class="star-btn${isStarred(r['Player']||r['Name']||'')?'starred':''}" onclick="event.stopPropagation();toggleStarByName('${escH((r['Player']||r['Name']||'').replace(/'/g,"\\'"))}')">${isStarred(r['Player']||r['Name']||'')?'★':'☆'}</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function drawSimRadar(rows,metrics){
+  const wrap=document.getElementById('simRadarWrap'); wrap.style.display='block';
+  const rm=metrics.slice(0,10).filter(m=>colStats[m]);
+  const labels=rm.map(m=>m.replace(' per 90','').replace(', %','%'));
+  const COLORS=['#63b3ed','#68d391','#f6e05e','#fc8181'];
+  const refDs={label:simRefRow['Player']||'Ref',data:rm.map(m=>{const cs=colStats[m];if(!cs)return 50;const v=parseFloat(simRefRow[m]);return isNaN(v)?50:Math.round(cs.vals.filter(vv=>vv<=v).length/cs.vals.length*100)}),fill:true,backgroundColor:'rgba(255,255,255,0.05)',borderColor:'rgba(255,255,255,0.5)',borderDash:[5,3],pointRadius:2};
+  const datasets=[refDs,...rows.slice(0,3).map((r,i)=>({label:r['Player']||r['Name']||'?',data:rm.map(m=>{const cs=colStats[m];if(!cs)return 50;const v=parseFloat(r[m]);return isNaN(v)?50:Math.round(cs.vals.filter(vv=>vv<=v).length/cs.vals.length*100)}),fill:true,backgroundColor:COLORS[i]+'20',borderColor:COLORS[i]+'cc',pointBackgroundColor:COLORS[i],pointRadius:2}))];
+  const ctx=document.getElementById('simRadar').getContext('2d');
+  if(simRadarI)simRadarI.destroy();
+  simRadarI=new Chart(ctx,{type:'radar',data:{labels,datasets},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#a0aec0',font:{size:9}},position:'bottom'}},scales:{r:{min:0,max:100,ticks:{stepSize:25,color:'#4a5568',font:{size:8},backdropColor:'transparent'},grid:{color:'#1a1f2e'},pointLabels:{color:'#a0aec0',font:{size:8}},angleLines:{color:'#1a1f2e'}}},animation:{duration:200}}});
+}
+
+function exportSimResults(){
+  if(!simResults.length)return;
+  const keys=['Player','Team','Position','_league','_sim'];
+  const hdr='Player,Team,Position,League,Similarity%';
+  const rows=simResults.map(r=>keys.map(k=>`"${String(k==='_sim'?r._sim.toFixed(1):r[k]??'').replace(/"/g,'""')}"`).join(','));
+  dl([hdr,...rows].join('\n'),`similar_to_${(simRefRow['Player']||'player').replace(/\s+/g,'_')}.csv`,'text/csv');
+}
+
+/* ═══════════════════════════════════════
+   UTILS
+═══════════════════════════════════════ */
+function escH(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeDrawer();closeExportMenu()}if(e.key==='Enter'&&!document.getElementById('analyseBtn').disabled)runAnalysis()});
+document.addEventListener('click',e=>{if(!document.getElementById('exportWrap').contains(e.target))closeExportMenu()});
+
+/* ═══════════════════════════════════════
+   EXPORT LIST
+═══════════════════════════════════════ */
+let exportColsSelected=new Set();
+
+function toggleExportMenu(){
+  const wrap=document.getElementById('exportWrap');
+  const isOpen=wrap.classList.toggle('open');
+  if(isOpen) buildExportColPicker();
+}
+function closeExportMenu(){document.getElementById('exportWrap').classList.remove('open')}
+
+function buildExportColPicker(){
+  const el=document.getElementById('exportColList');
+  if(el.children.length) return; // already built
+  const cols=['Player','Team','Position','Age','Minutes played','League',...numericCols.slice(0,40)];
+  const defaults=new Set(['Player','Team','Position','Age','Minutes played','League',
+    'Goals per 90','xG per 90','xA per 90','Assists per 90','Shots per 90',
+    'Shots on target, %','Goal conversion, %','Touches in box per 90','Dribbles per 90','Aerial duels won, %']);
+  exportColsSelected=new Set([...defaults].filter(c=>cols.includes(c)));
+  el.innerHTML=cols.map(c=>`<span class="ecol-chip${exportColsSelected.has(c)?' on':''}" onclick="toggleExportCol(this,'${escH(c).replace(/'/g,"\\'")}') ">${escH(c.length>22?c.slice(0,21)+'…':c)}</span>`).join('');
+}
+
+function toggleExportCol(el,col){
+  if(exportColsSelected.has(col)){exportColsSelected.delete(col);el.classList.remove('on')}
+  else{exportColsSelected.add(col);el.classList.add('on')}
+}
+
+function exportList(type){
+  let rows, filename;
+  if(type==='anomalies'){
+    if(!displayedRows.length){alert('No anomalies to export. Run analysis first.');return}
+    rows=displayedRows; filename='anomalies';
+  } else if(type==='filtered'){
+    if(!filteredRows.length){alert('No filtered data. Run analysis first.');return}
+    rows=filteredRows; filename='filtered_players';
+  } else if(type==='shortlist'){
+    if(!shortlist.length){alert('Shortlist is empty.');return}
+    // Resolve full rows from allRows
+    const names=new Set(shortlist.map(p=>p.name));
+    rows=allRows.filter(r=>(r['Player']||r['Name']||'')&&names.has(r['Player']||r['Name']));
+    if(!rows.length){rows=shortlist.map(p=>({'Player':p.name,'Team':p.team,'Position':p.pos,'League':p.league}));}
+    filename='shortlist';
+  } else if(type==='all'){
+    if(!allRows.length){alert('No data loaded.');return}
+    rows=allRows; filename='all_players';
+  }
+
+  // Build column list
+  const rawCols=exportColsSelected.size
+    ? [...exportColsSelected]
+    : ['Player','Team','Position','Age','Minutes played','_league'];
+  // Map 'League' to _league
+  const cols=rawCols.map(c=>c==='League'?'_league':c);
+  const headers=rawCols;
+
+  // Add z-score column for anomalies
+  const hasZ=type==='anomalies';
+  const metric=document.getElementById('metricSelect').value;
+  const finalHeaders=[...headers,...(hasZ?['Z-Score','Metric Value']:[''])].filter(Boolean);
+
+  const csvRows=[finalHeaders.map(h=>`"${h}"`).join(',')];
+  rows.forEach(r=>{
+    const vals=cols.map(c=>{const v=r[c]??'';return`"${String(v).replace(/"/g,'""')}"`});
+    if(hasZ){vals.push(`"${r._z!=null?r._z.toFixed(3):''}"`,`"${r._value!=null?r._value.toFixed(3):''}"`)}
+    csvRows.push(vals.join(','));
+  });
+
+  dl(csvRows.join('\n'),`${filename}_${new Date().toISOString().slice(0,10)}.csv`,'text/csv');
+  closeExportMenu();
+  // Brief confirmation
+  const btn=document.querySelector('#exportWrap .btn');
+  const orig=btn.textContent; btn.textContent=`✓ ${rows.length} rows exported`;
+  setTimeout(()=>btn.textContent=orig,2000);
+}
+</script>
+</body>
+</html>
