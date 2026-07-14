@@ -257,6 +257,8 @@ table.dataTable tbody tr{cursor:pointer}
           line-height:1;opacity:.35;transition:.15s;vertical-align:middle}
 .star-btn:hover,.star-btn.starred{opacity:1}
 .star-btn.starred{color:#F59E0B}
+.pc-actions{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.pc-actions .star-btn{font-size:22px}
 
 /* ── MODAL ── */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1000;
@@ -359,8 +361,8 @@ table.dataTable tbody tr{cursor:pointer}
         <div class="section-body no-pad">
           <table class="xl-table" id="summaryTable">
             <thead><tr>
-              <th>#</th><th>Player</th><th>Pos</th><th>Team</th><th>League</th>
-              <th>Age</th><th>Contract</th><th>Mkt Val</th><th>SQS</th><th>Lamberts LI</th><th>vs HK</th><th>Tier</th><th>Uncertainty</th>
+              <th>★</th><th>#</th><th>Player</th><th>Pos</th><th>Team</th><th>League</th>
+              <th>Age</th><th>Contract</th><th>Mkt Val</th><th>SQS</th><th>Lamberts LI</th><th>vs HK</th><th>Tier</th><th>Uncertainty</th><th>Actions</th>
             </tr></thead>
             <tbody id="summaryBody"></tbody>
           </table>
@@ -686,9 +688,9 @@ table.dataTable tbody tr{cursor:pointer}
       <div class="section-body no-pad">
         <table id="upgradesTable" style="width:100%">
           <thead><tr>
-            <th>#</th><th>Player</th><th>Pos</th><th>Team</th><th>League</th>
+            <th>★</th><th>#</th><th>Player</th><th>Pos</th><th>Team</th><th>League</th>
             <th>Age</th><th>Contract</th><th>Mkt Val</th>
-            <th>SQS</th><th>Imp Total</th><th>LI</th><th>Tier</th><th>vs HK</th><th>Signal</th><th>Uncertainty</th>
+            <th>SQS</th><th>Imp Total</th><th>LI</th><th>Tier</th><th>vs HK</th><th>Signal</th><th>Uncertainty</th><th>Actions</th>
           </tr></thead>
           <tbody></tbody>
         </table>
@@ -729,9 +731,9 @@ table.dataTable tbody tr{cursor:pointer}
       <div class="section-body no-pad">
         <table id="allTable" style="width:100%">
           <thead><tr>
-            <th>#</th><th>Player</th><th>Pos</th><th>Team</th><th>League</th>
+            <th>★</th><th>#</th><th>Player</th><th>Pos</th><th>Team</th><th>League</th>
             <th>Age</th><th>Contract</th><th>Mkt Val</th><th>SQS</th><th>Bloom</th>
-            <th>Tier</th><th>Status</th><th>vs HK</th><th>G/90</th><th>xG/90</th><th>A/90</th><th>PP/90</th><th>DD%</th><th>Int/90</th><th>Uncertainty</th>
+            <th>Tier</th><th>Status</th><th>vs HK</th><th>G/90</th><th>xG/90</th><th>A/90</th><th>PP/90</th><th>DD%</th><th>Int/90</th><th>Uncertainty</th><th>Actions</th>
           </tr></thead>
           <tbody></tbody>
         </table>
@@ -790,7 +792,7 @@ table.dataTable tbody tr{cursor:pointer}
         <div class="section-hdr"><h3 id="pos-table-title">Top Candidates</h3></div>
         <div class="section-body no-pad">
           <table class="xl-table" id="posTable">
-            <thead><tr><th>#</th><th>Player</th><th>Team</th><th>Lg</th><th>Age</th><th>Mkt Val</th><th>SQS</th><th>BI</th><th>vs HK</th><th>Status</th><th>Tier</th><th>Uncertainty</th></tr></thead>
+            <thead><tr><th>★</th><th>#</th><th>Player</th><th>Team</th><th>Lg</th><th>Age</th><th>Mkt Val</th><th>SQS</th><th>BI</th><th>vs HK</th><th>Status</th><th>Tier</th><th>Uncertainty</th><th>Actions</th></tr></thead>
             <tbody id="posTableBody"></tbody>
           </table>
         </div>
@@ -953,10 +955,10 @@ table.dataTable tbody tr{cursor:pointer}
       <div class="section-body no-pad">
         <table class="xl-table" id="impTable">
           <thead><tr>
-            <th>#</th><th>Player</th><th>Pos</th><th>Team</th><th>League</th><th>Age</th>
+            <th>★</th><th>#</th><th>Player</th><th>Pos</th><th>Team</th><th>League</th><th>Age</th>
             <th>SQS</th><th>Wyscout Tier</th>
             <th>Imp Off %</th><th>Imp Def %</th><th>Imp Total %</th>
-            <th>Signal</th><th>LI</th><th>Mkt Val</th><th>Uncertainty</th>
+            <th>Signal</th><th>LI</th><th>Mkt Val</th><th>Uncertainty</th><th>Actions</th>
           </tr></thead>
           <tbody id="impBody"></tbody>
         </table>
@@ -1146,17 +1148,20 @@ table.dataTable tbody tr{cursor:pointer}
     <div class="doc-title">
       <div>
         <h2>Shortlist</h2>
-        <div class="doc-sub">Your starred players — click ★ on any row to add · notes saved automatically</div>
+        <div class="doc-sub">Your starred players — click ★ on any player row, anywhere in the workbook, to add · notes saved automatically</div>
       </div>
       <div class="doc-meta">
         <div id="shortlist-meta"></div>
-        <div><button class="wb-btn" onclick="exportShortlist()" style="margin-top:6px;background:var(--blue);border-color:var(--blue)">⬇ Export Shortlist</button></div>
+        <div style="margin-top:6px">
+          <button class="wb-btn" onclick="exportShortlist()" style="background:var(--blue);border-color:var(--blue)">⬇ Export Shortlist</button>
+          <button class="wb-btn" onclick="clearShortlist()" style="background:var(--red-mid);border-color:var(--red-mid)">✕ Clear All</button>
+        </div>
       </div>
     </div>
     <div id="shortlist-empty" style="text-align:center;padding:60px;color:var(--grey)">
       <div style="font-size:48px;margin-bottom:12px">⭐</div>
       <div style="font-size:15px;font-weight:700;color:#374151">No players shortlisted yet</div>
-      <div style="font-size:12px;margin-top:5px">Click the ★ button on any player row to add them here</div>
+      <div style="font-size:12px;margin-top:5px">Click the ★ button on any player row — Recommendations, Clear Upgrades, All Targets, Impect, By Position or a Player Profile — to add them here</div>
     </div>
     <div id="shortlist-content" style="display:none">
       <table class="xl-table" id="shortlistTable">
@@ -1264,6 +1269,15 @@ function uncBadge(d){
   return `<span title="${title}" style="display:inline-block;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:700;background:${UNC_BG[u.tier]};color:${UNC_COLOR[u.tier]};white-space:nowrap">${UNC_LABEL[u.tier]} · ${u.score}</span>`;
 }
 
+// ══════════════════════════════════════════════════════════════════════════
+// SHORTLIST STATE (localStorage-backed) — declared early so every table
+// builder below (which renders star/notes buttons at build time) can read it.
+// ══════════════════════════════════════════════════════════════════════════
+let shortlist = JSON.parse(localStorage.getItem('hk_shortlist')||'[]');
+let notes     = JSON.parse(localStorage.getItem('hk_notes')||'{}');
+let _notesKey = null;
+let _compareA = null, _compareB = null;
+
 // ── helpers ────────────────────────────────────────────────────────────────
 const tt=document.getElementById("tt");
 function showTT(h,e){tt.innerHTML=h;tt.style.display="block";tt.style.left=(e.clientX+14)+"px";tt.style.top=(e.clientY-14)+"px";}
@@ -1286,6 +1300,17 @@ function upgCell(u){
 }
 function pbar(pct,col){
   return `<div class="pbar-wrap"><div class="pbar-track"><div class="pbar-fill" style="width:${pct}%;background:${col}"></div></div><span class="pbar-val" style="color:${col}">${Math.round(pct)}</span></div>`;
+}
+function nameCell(d){
+  const pn=d.name.replace(/'/g,"\\'"), pt=d.team.replace(/'/g,"\\'");
+  return `<strong style="cursor:pointer" onmouseover="this.style.color='var(--blue)'" onmouseout="this.style.color=''" onclick="event.stopPropagation();goToProfile('${pn}','${pt}')">${d.name}</strong>${notes[starKey(d)]?'<span class="note-badge"></span>':''}<small style="display:block;color:#9CA3AF;font-size:10px">${d.position}</small>`;
+}
+function actionCell(d){
+  const pn=d.name.replace(/'/g,"\\'"), pt=d.team.replace(/'/g,"\\'");
+  return `<div style="display:flex;gap:3px;white-space:nowrap">
+    <button class="wb-btn" style="padding:2px 6px;font-size:10px" onclick="event.stopPropagation();openNotes('${pn}','${pt}')" title="Scout notes">📝</button>
+    <button class="wb-btn" style="padding:2px 6px;font-size:10px" onclick="event.stopPropagation();addToCompare('${pn}','${pt}')" title="Add to comparison">⚖</button>
+  </div>`;
 }
 
 // ── Tab navigation ─────────────────────────────────────────────────────────
@@ -1418,9 +1443,11 @@ function renderImpect(){
         : '<span style="color:var(--grey)">—</span>';
     const mv = p.mv ? '€'+p.mv.toLocaleString() : '—';
     const liCol = p.bi>=20?'#166534':p.bi>=-10?'#92400E':'#991B1B';
-    return `<tr>
+    const pn=p.name.replace(/'/g,"\\'"), pt=p.team.replace(/'/g,"\\'");
+    return `<tr style="cursor:pointer" onclick="goToProfile('${pn}','${pt}')">
+      <td>${starBtn(p)}</td>
       <td style="color:var(--grey)">${i+1}</td>
-      <td style="font-weight:700">${p.name}</td>
+      <td style="font-weight:700">${p.name}${notes[starKey(p)]?'<span class="note-badge"></span>':''}</td>
       <td><span class="pos-badge pos-${p.pos}">${p.pos}</span></td>
       <td>${p.team}</td><td>${p.league}</td><td>${p.age}</td>
       <td><b>${p.sqs}</b></td>
@@ -1429,10 +1456,12 @@ function renderImpect(){
       <td>${sig}</td>
       <td style="font-weight:700;color:${liCol}">${p.bi}</td>
       <td>${mv}</td>
-      <td>${uncBadge(p)}</td></tr>`;
+      <td>${uncBadge(p)}</td>
+      <td>${actionCell(p)}</td></tr>`;
   });
 
   document.getElementById('impBody').innerHTML = html_rows.join('');
+  refreshStarButtons();
 
   // Finding cards
   const matched_set = DATA.filter(p=>p.imp_t_pct>=0);
@@ -1510,9 +1539,12 @@ document.getElementById("summary-findings").innerHTML=`
 
 // Summary table (top 15 clear upgrade + elite)
 const top15=DATA.filter(d=>d.upgrade==="CLEAR UPGRADE").sort((a,b)=>b.bi-a.bi).slice(0,15);
-document.getElementById("summaryBody").innerHTML=top15.map((d,i)=>`<tr>
+document.getElementById("summaryBody").innerHTML=top15.map((d,i)=>{
+  const pn=d.name.replace(/'/g,"\\'"), pt=d.team.replace(/'/g,"\\'");
+  return `<tr style="cursor:pointer" onclick="goToProfile('${pn}','${pt}')">
+  <td>${starBtn(d)}</td>
   <td class="cell-grey">${i+1}</td>
-  <td><strong>${d.name}</strong></td>
+  <td><strong>${d.name}</strong>${notes[starKey(d)]?'<span class="note-badge"></span>':''}</td>
   <td class="cell-blue">${d.pos}</td>
   <td>${d.team}</td><td>${d.league}</td>
   <td class="${d.age<=23?"cell-green":""}"><strong>${d.age}</strong></td>
@@ -1523,7 +1555,10 @@ document.getElementById("summaryBody").innerHTML=top15.map((d,i)=>`<tr>
   <td class="${d.gap>0?"cell-green":"cell-red"}">${fli(d.gap)}</td>
   <td>${tierCell(d.tier)}</td>
   <td>${uncBadge(d)}</td>
-</tr>`).join("");
+  <td>${actionCell(d)}</td>
+</tr>`;
+}).join("");
+refreshStarButtons();
 
 // Budget viz
 const eliteU=DATA.filter(d=>d.tier==="ELITE"&&d.upgrade==="CLEAR UPGRADE").sort((a,b)=>a.mv-b.mv);
@@ -1712,8 +1747,9 @@ function sigCell(d){
 
 function mkRow(d,i){
   return [
+    starBtn(d),
     i+1,
-    `<strong>${d.name}</strong><small style="display:block;color:#9CA3AF;font-size:10px">${d.position}</small>`,
+    nameCell(d),
     `<span class="pos-badge pos-${d.pos}">${d.pos}</span>`,
     d.team,d.league,
     d.age<=23?`<strong style="color:#166534">${d.age}</strong>`:d.age,
@@ -1726,12 +1762,14 @@ function mkRow(d,i){
     `<strong style="color:${d.gap>0?"#166534":"#991B1B"}">${fli(d.gap)}</strong>`,
     sigCell(d),
     uncBadge(d),
+    actionCell(d),
   ];
 }
 function mkRowShort(d,i){
   return [
+    starBtn(d),
     i+1,
-    `<strong>${d.name}</strong><small style="display:block;color:#9CA3AF;font-size:10px">${d.position}</small>`,
+    nameCell(d),
     `<strong style="color:var(--blue)">${d.pos}</strong>`,
     d.team,d.league,
     d.age<=23?`<strong style="color:#166534">${d.age}</strong>`:d.age,
@@ -1742,7 +1780,8 @@ function mkRowShort(d,i){
     tierCell(d.tier),upgCell(d.upgrade),
     `<strong style="color:${d.gap>0?"#166534":"#991B1B"}">${fli(d.gap)}</strong>`,
     d.g90,d.xg90,d.a90,d.pp90,d.ddw+"%",d.int90,
-    uncBadge(d)
+    uncBadge(d),
+    actionCell(d),
   ];
 }
 
@@ -1798,8 +1837,8 @@ function buildUpgrades(){
 
   if(!upgDT){
     upgDT=$("#upgradesTable").DataTable({data:d.map(mkRow),pageLength:25,lengthMenu:[25,50,100],
-      columnDefs:[{targets:[1,2,7,8,9,13,14],orderable:false}],language:{search:"Search:"},
-      drawCallback:function(){document.getElementById("upgCount").textContent=this.api().rows({filter:"applied"}).count()+" players";}
+      columnDefs:[{targets:[0,2,3,8,9,10,14,15,16],orderable:false},{targets:16,width:"66px"}],language:{search:"Search:"},
+      drawCallback:function(){document.getElementById("upgCount").textContent=this.api().rows({filter:"applied"}).count()+" players";refreshStarButtons();}
     });
   } else { upgDT.clear();upgDT.rows.add(d.map(mkRow));upgDT.draw(); }
 }
@@ -1850,8 +1889,8 @@ function buildAll(){
   document.getElementById("allCount").textContent=d.length+" players";
   if(!allDT){
     allDT=$("#allTable").DataTable({data:d.map(mkRowShort),pageLength:25,lengthMenu:[25,50,100,551],
-      columnDefs:[{targets:[1,9,10,11,19],orderable:false}],language:{search:"Search:"},
-      drawCallback:function(){document.getElementById("allCount").textContent=this.api().rows({filter:"applied"}).count()+" players";}
+      columnDefs:[{targets:[0,2,10,11,12,20,21],orderable:false},{targets:21,width:"66px"}],language:{search:"Search:"},
+      drawCallback:function(){document.getElementById("allCount").textContent=this.api().rows({filter:"applied"}).count()+" players";refreshStarButtons();}
     });
   } else { allDT.clear();allDT.rows.add(d.map(mkRowShort));allDT.draw(); }
 }
@@ -1924,9 +1963,14 @@ function renderProfile(d){
   document.getElementById("profileCard").innerHTML=`
     <div class="pc-top">
       <div class="pc-avatar">${inits(d.name)}</div>
-      <div>
+      <div style="flex:1">
         <div class="pc-name">${d.name}${d.cflag==="2026"?'<span style="font-size:13px;margin-left:8px;color:#FCD34D">✦</span>':""}</div>
         <div class="pc-meta">${d.pos} · ${d.position} · ${d.team} · ${d.league} · Age ${d.age} · ${fmv(d.mv)} · ${d.mins.toLocaleString()} mins</div>
+      </div>
+      <div class="pc-actions">
+        ${starBtn(d)}
+        <button class="wb-btn" onclick="openNotes('${d.name.replace(/'/g,"\\'")}','${d.team.replace(/'/g,"\\'")}')">📝 Notes${notes[starKey(d)]?'<span class="note-badge"></span>':''}</button>
+        <button class="wb-btn" onclick="addToCompare('${d.name.replace(/'/g,"\\'")}','${d.team.replace(/'/g,"\\'")}')">⚖ Compare</button>
       </div>
     </div>
     <div class="pc-stats">
@@ -2007,8 +2051,11 @@ function renderPos(pos){
   document.getElementById("pos-tier-title").textContent=`${pos} — Value tiers`;
 
   // Position table
-  document.getElementById("posTableBody").innerHTML=top20.map((d,i)=>`<tr>
-    <td class="cell-grey">${i+1}</td><td><strong>${d.name}</strong><small style="display:block;color:#9CA3AF;font-size:9px">${d.team}</small></td>
+  document.getElementById("posTableBody").innerHTML=top20.map((d,i)=>{
+    const pn=d.name.replace(/'/g,"\\'"), pt=d.team.replace(/'/g,"\\'");
+    return `<tr style="cursor:pointer" onclick="goToProfile('${pn}','${pt}')">
+    <td>${starBtn(d)}</td>
+    <td class="cell-grey">${i+1}</td><td><strong>${d.name}</strong>${notes[starKey(d)]?'<span class="note-badge"></span>':''}<small style="display:block;color:#9CA3AF;font-size:9px">${d.team}</small></td>
     <td>${d.team}</td><td style="color:#9CA3AF;font-size:10px">${d.league}</td>
     <td class="${d.age<=23?"cell-green":""}">${d.age}</td>
     <td>${fmv(d.mv)}</td>
@@ -2017,7 +2064,10 @@ function renderPos(pos){
     <td class="${d.gap>0?"cell-green":"cell-red"}">${fli(d.gap)}</td>
     <td>${upgCell(d.upgrade)}</td><td>${tierCell(d.tier)}</td>
     <td>${uncBadge(d)}</td>
-  </tr>`).join("");
+    <td>${actionCell(d)}</td>
+  </tr>`;
+  }).join("");
+  refreshStarButtons();
 
   posCharts.posBar=new Chart(document.getElementById("posBar").getContext("2d"),{
     type:"bar",data:{labels:top20.map(d=>d.name.split(" ").slice(-1)[0].substring(0,11)),
@@ -2107,11 +2157,6 @@ document.getElementById("gapAnalysis").innerHTML=`
 // ══════════════════════════════════════════════════════════════════════════
 // SHORTLIST (localStorage-backed)
 // ══════════════════════════════════════════════════════════════════════════
-let shortlist = JSON.parse(localStorage.getItem('hk_shortlist')||'[]');
-let notes     = JSON.parse(localStorage.getItem('hk_notes')||'{}');
-let _notesKey = null;
-let _compareA = null, _compareB = null;
-
 function saveShortlist(){ localStorage.setItem('hk_shortlist', JSON.stringify(shortlist)); }
 function saveAllNotes(){ localStorage.setItem('hk_notes', JSON.stringify(notes)); }
 
@@ -2147,6 +2192,15 @@ function starBtn(p){
 function toggleStarByKey(k){
   if(shortlist.includes(k)) shortlist = shortlist.filter(x=>x!==k);
   else shortlist.push(k);
+  saveShortlist();
+  refreshStarButtons();
+  renderShortlist();
+}
+
+function clearShortlist(){
+  if(!shortlist.length) return;
+  if(!confirm(`Remove all ${shortlist.length} players from the shortlist? This cannot be undone.`)) return;
+  shortlist = [];
   saveShortlist();
   refreshStarButtons();
   renderShortlist();
