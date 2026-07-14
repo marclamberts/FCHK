@@ -3,6 +3,15 @@
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>FC Hradec Králové — Waltzing Analytics Recruitment Workbook 2025-26</title>
+<script>
+(function(){
+  try{
+    var saved=localStorage.getItem('hk_theme');
+    var theme=saved || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    if(theme==='dark') document.documentElement.setAttribute('data-theme','dark');
+  }catch(e){}
+})();
+</script>
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
@@ -15,62 +24,102 @@
   --white:#fff;--page-bg:#E8ECF0;
   --cell-even:#F8FAFF;--cell-odd:#fff;
   --header-bg:#1E3A8A;
+
+  /* ── theming: surfaces, text, elevation ── */
+  --surface:#fff;--surface-2:#F8FAFC;--surface-hover:#EFF6FF;
+  --text:#111;--text-soft:#374151;--text-mute:#6B7280;
+  --border-soft:#F1F5F9;--heading:var(--header-bg);
+  --pos-text:#166534;--neg-text:#991B1B;--warn-text:#92400E;--info-text:#1E40AF;
+  --shadow-color:16,24,40;
+  --shadow-xs:0 1px 2px rgba(var(--shadow-color),.06);
+  --shadow-sm:0 1px 3px rgba(var(--shadow-color),.08),0 1px 2px rgba(var(--shadow-color),.06);
+  --shadow-md:0 4px 10px rgba(var(--shadow-color),.08),0 10px 24px rgba(var(--shadow-color),.10);
+  --shadow-lg:0 14px 40px rgba(var(--shadow-color),.20);
+  --sheen:linear-gradient(180deg,rgba(255,255,255,.16),rgba(255,255,255,0) 42%);
+}
+:root[data-theme="dark"]{
+  --page-bg:#0B1220;--surface:#151E2E;--surface-2:#101828;--surface-hover:#1B2A44;
+  --cell-even:#111A2A;--cell-odd:#151E2E;
+  --grey-border:#26334A;--border-soft:#1E293B;
+  --grey-light:#1B2536;
+  --text:#E5E9F0;--text-soft:#C7D0DE;--text-mute:#93A1B7;
+  --heading:#8FB4FF;
+  --blue:#5B8DEF;--blue-mid:#3D74E0;
+  --pos-text:#4ADE80;--neg-text:#F87171;--warn-text:#FBBF24;--info-text:#60A5FA;
+  --shadow-color:0,0,0;
+  --shadow-xs:0 1px 2px rgba(0,0,0,.35);
+  --shadow-sm:0 1px 3px rgba(0,0,0,.4),0 1px 2px rgba(0,0,0,.3);
+  --shadow-md:0 4px 10px rgba(0,0,0,.35),0 10px 26px rgba(0,0,0,.35);
+  --shadow-lg:0 18px 46px rgba(0,0,0,.5);
+  --sheen:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,0) 42%);
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Inter',sans-serif;background:var(--page-bg);color:#111;font-size:13px;
-     display:flex;flex-direction:column;height:100vh;overflow:hidden}
+body{font-family:'Inter',sans-serif;background:var(--page-bg);color:var(--text);font-size:13px;
+     display:flex;flex-direction:column;height:100vh;overflow:hidden;transition:background .2s,color .2s}
 
 /* ── WORKBOOK HEADER ── */
-.wb-header{background:var(--header-bg);color:#fff;padding:0 24px;
+.wb-header{background:linear-gradient(160deg,var(--blue-mid) 0%,var(--header-bg) 45%,#101E42 100%);
+           background-image:var(--sheen),linear-gradient(160deg,var(--blue-mid) 0%,var(--header-bg) 45%,#101E42 100%);
+           color:#fff;padding:0 24px;position:relative;z-index:5;
+           box-shadow:var(--shadow-md),inset 0 -1px 0 rgba(255,255,255,.06);
            display:flex;align-items:center;justify-content:space-between;height:52px;flex-shrink:0}
 .wb-logo{display:flex;align-items:center;gap:12px}
-.wb-logo .crest{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,rgba(255,255,255,.25),rgba(255,255,255,.08));
+.wb-logo .crest{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,rgba(255,255,255,.28),rgba(255,255,255,.06) 60%);
                 border:2px solid rgba(255,255,255,.4);display:flex;align-items:center;
                 justify-content:center;font-size:11px;font-weight:900;letter-spacing:-1px;
-                box-shadow:0 2px 8px rgba(0,0,0,.2)}
+                box-shadow:0 2px 8px rgba(0,0,0,.3),inset 0 1px 1px rgba(255,255,255,.35)}
 .wb-logo h1{font-size:15px;font-weight:800;letter-spacing:-.3px}
 .wb-logo .sub{font-size:10px;opacity:.55;margin-top:1px;letter-spacing:.1px}
 .wb-logo .analyst-tag{font-size:9px;opacity:.45;margin-top:0px;letter-spacing:.3px;text-transform:uppercase}
 .wb-meta{display:flex;align-items:center;gap:16px;font-size:11px;opacity:.7}
 .wb-meta span{display:flex;align-items:center;gap:4px}
 .wb-actions{display:flex;gap:8px}
-.wb-btn{padding:5px 12px;border-radius:5px;border:1px solid rgba(255,255,255,.25);
-        background:rgba(255,255,255,.1);color:#fff;font-size:11px;font-weight:600;
+.wb-btn{padding:5px 12px;border-radius:5px;border:1px solid rgba(255,255,255,.28);
+        background:linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,255,255,.05));
+        color:#fff;font-size:11px;font-weight:600;
+        box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 1px 2px rgba(0,0,0,.2);
         cursor:pointer;transition:.15s;font-family:inherit}
-.wb-btn:hover{background:rgba(255,255,255,.2)}
+.wb-btn:hover{background:linear-gradient(180deg,rgba(255,255,255,.32),rgba(255,255,255,.08));
+              box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 2px 6px rgba(0,0,0,.25);transform:translateY(-1px)}
+.wb-btn:active{transform:translateY(0)}
+.theme-toggle{width:30px;height:30px;padding:0;border-radius:50%;display:flex;align-items:center;
+              justify-content:center;font-size:14px}
 
 /* ── SHEET AREA ── */
 .sheet-area{flex:1;overflow-y:auto;background:var(--page-bg);padding:20px 24px 8px}
 
 /* ── BOTTOM TAB BAR ── */
-.tab-bar{background:#D1D5DB;border-top:2px solid #9CA3AF;display:flex;
-         align-items:flex-end;padding:0 12px;gap:2px;height:36px;flex-shrink:0;overflow-x:auto}
-.sheet-tab{padding:6px 18px;font-size:11px;font-weight:700;color:#4B5563;
-           background:#E5E7EB;border:1px solid #9CA3AF;border-bottom:none;
+.tab-bar{background:var(--surface-2);border-top:1px solid var(--grey-border);display:flex;
+         align-items:flex-end;padding:0 12px;gap:2px;height:36px;flex-shrink:0;overflow-x:auto;
+         box-shadow:0 -2px 8px rgba(var(--shadow-color),.05)}
+.sheet-tab{padding:6px 18px;font-size:11px;font-weight:700;color:var(--text-mute);
+           background:var(--grey-light);border:1px solid var(--grey-border);border-bottom:none;
            border-radius:4px 4px 0 0;cursor:pointer;white-space:nowrap;transition:.1s;
            display:flex;align-items:center;gap:5px}
-.sheet-tab:hover{background:#F3F4F6;color:#1A56DB}
-.sheet-tab.active{background:#fff;color:var(--blue);border-color:#9CA3AF;
-                  border-bottom:2px solid #fff;margin-bottom:-2px;padding-bottom:8px}
+.sheet-tab:hover{background:var(--surface-hover);color:var(--blue)}
+.sheet-tab.active{background:var(--surface);color:var(--blue);border-color:var(--grey-border);
+                  border-bottom:2px solid var(--surface);margin-bottom:-2px;padding-bottom:8px;
+                  box-shadow:0 -2px 6px rgba(var(--shadow-color),.06)}
 .sheet-tab .tab-dot{width:7px;height:7px;border-radius:50%}
 
 /* ── SHEET PANEL ── */
 .sheet-panel{display:none}.sheet-panel.active{display:block}
 
 /* ── DOCUMENT TITLE BLOCK ── */
-.doc-title{background:#fff;border:1px solid var(--grey-border);border-radius:8px;
+.doc-title{background:var(--surface);border:1px solid var(--grey-border);border-radius:8px;
+           box-shadow:var(--shadow-sm);
            padding:18px 24px;margin-bottom:16px;display:flex;align-items:flex-start;justify-content:space-between}
-.doc-title h2{font-size:18px;font-weight:900;color:var(--header-bg);letter-spacing:-.4px}
-.doc-title .doc-sub{font-size:12px;color:var(--grey);margin-top:4px}
+.doc-title h2{font-size:18px;font-weight:900;color:var(--heading);letter-spacing:-.4px}
+.doc-title .doc-sub{font-size:12px;color:var(--text-mute);margin-top:4px}
 .doc-title .doc-tags{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
 .doc-tag{padding:2px 10px;border-radius:20px;font-size:10px;font-weight:700;border:1px solid}
-.doc-meta{text-align:right;font-size:11px;color:var(--grey);line-height:1.8}
-.doc-meta strong{color:#111;font-weight:700}
+.doc-meta{text-align:right;font-size:11px;color:var(--text-mute);line-height:1.8}
+.doc-meta strong{color:var(--text);font-weight:700}
 
 /* ── SECTION HEADERS ── */
-.section{background:#fff;border:1px solid var(--grey-border);border-radius:8px;
-         margin-bottom:14px;overflow:hidden}
-.section-hdr{background:linear-gradient(90deg,var(--header-bg),#2563EB);color:#fff;
+.section{background:var(--surface);border:1px solid var(--grey-border);border-radius:8px;
+         margin-bottom:14px;overflow:hidden;box-shadow:var(--shadow-sm)}
+.section-hdr{background:var(--sheen),linear-gradient(100deg,var(--header-bg),var(--blue-mid) 130%);color:#fff;
              padding:10px 18px;display:flex;align-items:center;justify-content:space-between}
 .section-hdr h3{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.7px}
 .section-hdr .sh-sub{font-size:10px;opacity:.7}
@@ -79,7 +128,7 @@ body{font-family:'Inter',sans-serif;background:var(--page-bg);color:#111;font-si
 
 /* ── FINDING CARDS ── */
 .findings{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px}
-.finding{border-radius:8px;padding:14px 16px;border-left:4px solid}
+.finding{border-radius:8px;padding:14px 16px;border-left:4px solid;box-shadow:var(--shadow-xs)}
 .finding.blue{background:#EFF6FF;border-color:var(--blue)}
 .finding.green{background:var(--green-light);border-color:var(--green-mid)}
 .finding.amber{background:var(--amber-light);border-color:var(--amber-mid)}
@@ -87,7 +136,7 @@ body{font-family:'Inter',sans-serif;background:var(--page-bg);color:#111;font-si
 .finding .f-num{font-size:26px;font-weight:900;line-height:1;letter-spacing:-1px}
 .finding.blue .f-num{color:var(--blue)} .finding.green .f-num{color:var(--green-mid)}
 .finding.amber .f-num{color:var(--amber-mid)} .finding.red .f-num{color:var(--red-mid)}
-.finding .f-lbl{font-size:11px;font-weight:600;color:#374151;margin-top:4px}
+.finding .f-lbl{font-size:11px;font-weight:600;color:var(--text-soft);margin-top:4px}
 .finding .f-desc{font-size:10px;color:var(--grey);margin-top:3px;line-height:1.5}
 
 /* ── EXCEL-STYLE TABLES ── */
@@ -95,13 +144,13 @@ body{font-family:'Inter',sans-serif;background:var(--page-bg);color:#111;font-si
 .xl-table thead tr{background:var(--header-bg);color:#fff}
 .xl-table thead th{padding:8px 10px;font-size:10px;font-weight:700;text-transform:uppercase;
                    letter-spacing:.4px;white-space:nowrap;border-right:1px solid rgba(255,255,255,.1)}
-.xl-table tbody tr:nth-child(even) td{background:var(--cell-even)}
-.xl-table tbody tr:nth-child(odd)  td{background:var(--cell-odd)}
-.xl-table tbody tr:hover td{background:#EFF6FF!important}
-.xl-table tbody td{padding:7px 10px;border-bottom:1px solid #F1F5F9;border-right:1px solid #F5F5F5;
+.xl-table tbody tr:nth-child(even) td{background:var(--cell-even);color:var(--text)}
+.xl-table tbody tr:nth-child(odd)  td{background:var(--cell-odd);color:var(--text)}
+.xl-table tbody tr:hover td{background:var(--surface-hover)!important}
+.xl-table tbody td{padding:7px 10px;border-bottom:1px solid var(--border-soft);border-right:1px solid var(--border-soft);
                    white-space:nowrap}
 .xl-table tbody td.wrap{white-space:normal}
-.xl-table tfoot td{background:#F8FAFC;font-weight:700;font-size:11px;padding:7px 10px;
+.xl-table tfoot td{background:var(--surface-2);font-weight:700;font-size:11px;padding:7px 10px;
                    border-top:2px solid var(--grey-border)}
 
 /* ── CONDITIONAL CELL FILLS ── */
@@ -113,14 +162,22 @@ body{font-family:'Inter',sans-serif;background:var(--page-bg);color:#111;font-si
 .cell-upgr {background:#D1FAE5!important;color:#065F46;font-weight:700}
 .cell-rot  {background:#FEF3C7!important;color:#92400E}
 .cell-depth{background:#F9FAFB!important;color:#9CA3AF}
-.cell-green{color:#166534;font-weight:700} .cell-amber{color:#92400E;font-weight:700}
-.cell-red  {color:#991B1B;font-weight:700} .cell-blue {color:var(--blue);font-weight:700}
-.cell-grey {color:#9CA3AF}
+.cell-green{color:var(--pos-text);font-weight:700} .cell-amber{color:var(--warn-text);font-weight:700}
+.cell-red  {color:var(--neg-text);font-weight:700} .cell-blue {color:var(--blue);font-weight:700}
+.cell-grey {color:var(--text-mute)}
 .cflag     {color:#DC2626;font-weight:700;font-size:10px}
+[data-theme="dark"] .cell-elite{background:rgba(16,185,129,.16)!important;color:#6EE7B7}
+[data-theme="dark"] .cell-high {background:rgba(34,197,94,.14)!important;color:#86EFAC}
+[data-theme="dark"] .cell-value{background:rgba(59,130,246,.16)!important;color:#93C5FD}
+[data-theme="dark"] .cell-fair {background:rgba(148,163,184,.10)!important;color:#CBD5E1}
+[data-theme="dark"] .cell-over {background:rgba(239,68,68,.16)!important;color:#FCA5A5}
+[data-theme="dark"] .cell-upgr {background:rgba(16,185,129,.16)!important;color:#6EE7B7}
+[data-theme="dark"] .cell-rot  {background:rgba(245,158,11,.16)!important;color:#FCD34D}
+[data-theme="dark"] .cell-depth{background:rgba(148,163,184,.08)!important;color:#94A3B8}
 
 /* ── PBAR (inline percentile bar) ── */
 .pbar-wrap{display:flex;align-items:center;gap:5px}
-.pbar-track{width:50px;height:5px;background:#E5E7EB;border-radius:3px;overflow:hidden;flex-shrink:0}
+.pbar-track{width:50px;height:5px;background:var(--grey-border);border-radius:3px;overflow:hidden;flex-shrink:0}
 .pbar-fill{height:100%;border-radius:3px}
 .pbar-val{font-size:11px;font-weight:700;min-width:24px}
 
@@ -129,33 +186,36 @@ table.dataTable thead th{background:var(--header-bg)!important;color:#fff!import
   font-size:10px!important;font-weight:700!important;text-transform:uppercase!important;
   letter-spacing:.4px!important;border-bottom:none!important;padding:8px 10px!important;
   border-right:1px solid rgba(255,255,255,.1)!important}
-table.dataTable tbody td{padding:7px 10px!important;font-size:12px!important;border-bottom:1px solid #F1F5F9!important}
+table.dataTable tbody td{padding:7px 10px!important;font-size:12px!important;border-bottom:1px solid var(--border-soft)!important;color:var(--text)}
 table.dataTable tbody tr:nth-child(even) td{background:var(--cell-even)!important}
-table.dataTable tbody tr:hover td{background:#EFF6FF!important}
-.dataTables_wrapper .dataTables_filter input{border:1.5px solid var(--grey-border);border-radius:5px;padding:4px 10px;font-family:inherit;font-size:12px}
-.dataTables_wrapper .dataTables_length select{border:1.5px solid var(--grey-border);border-radius:5px;font-family:inherit}
+table.dataTable tbody tr:hover td{background:var(--surface-hover)!important}
+.dataTables_wrapper .dataTables_filter input{border:1.5px solid var(--grey-border);border-radius:5px;padding:4px 10px;font-family:inherit;font-size:12px;background:var(--surface);color:var(--text)}
+.dataTables_wrapper .dataTables_length select{border:1.5px solid var(--grey-border);border-radius:5px;font-family:inherit;background:var(--surface);color:var(--text)}
 .dataTables_wrapper .dataTables_paginate .paginate_button.current{background:var(--blue)!important;color:#fff!important;border-radius:5px;border:none!important}
-.dataTables_wrapper .dataTables_paginate .paginate_button:hover{background:#EFF6FF!important;color:var(--blue)!important;border-radius:5px;border:none!important}
-.dataTables_info,.dataTables_length,.dataTables_filter{font-size:11px;color:var(--grey)}
+.dataTables_wrapper .dataTables_paginate .paginate_button:hover{background:var(--surface-hover)!important;color:var(--blue)!important;border-radius:5px;border:none!important}
+.dataTables_wrapper .dataTables_paginate .paginate_button{color:var(--text)!important}
+.dataTables_info,.dataTables_length,.dataTables_filter{font-size:11px;color:var(--text-mute)}
+.dataTables_length label,.dataTables_filter label{color:var(--text-mute)}
 
 /* ── METHODOLOGY ── */
 .method-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-.method-block{background:#F8FAFC;border:1px solid var(--grey-border);border-radius:8px;padding:16px}
-.method-block h4{font-size:12px;font-weight:800;color:var(--header-bg);text-transform:uppercase;
+.method-block{background:var(--surface-2);border:1px solid var(--grey-border);border-radius:8px;padding:16px;box-shadow:var(--shadow-xs)}
+.method-block h4{font-size:12px;font-weight:800;color:var(--heading);text-transform:uppercase;
                  letter-spacing:.5px;margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid var(--blue)}
-.method-block p{font-size:12px;color:#374151;line-height:1.7;margin-bottom:8px}
+.method-block p{font-size:12px;color:var(--text-soft);line-height:1.7;margin-bottom:8px}
 .method-block p:last-child{margin-bottom:0}
 .formula-box{background:var(--header-bg);color:#fff;border-radius:6px;padding:12px 16px;
-             font-family:monospace;font-size:13px;margin:10px 0;text-align:center;letter-spacing:.5px}
+             font-family:monospace;font-size:13px;margin:10px 0;text-align:center;letter-spacing:.5px;
+             box-shadow:var(--shadow-xs),inset 0 1px 0 rgba(255,255,255,.08)}
 .weight-table{width:100%;border-collapse:collapse;font-size:11px;margin-top:8px}
-.weight-table th{background:#E0E7FF;color:var(--blue);padding:5px 8px;font-weight:700;
-                 text-align:left;border:1px solid #C7D2FE}
-.weight-table td{padding:5px 8px;border:1px solid #E5E7EB}
-.weight-table tr:nth-child(even) td{background:#F5F7FF}
-.threshold-row{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid #F1F5F9}
+.weight-table th{background:var(--surface-hover);color:var(--blue);padding:5px 8px;font-weight:700;
+                 text-align:left;border:1px solid var(--grey-border)}
+.weight-table td{padding:5px 8px;border:1px solid var(--border-soft);color:var(--text-soft)}
+.weight-table tr:nth-child(even) td{background:var(--surface-2)}
+.threshold-row{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--border-soft)}
 .threshold-row:last-child{border-bottom:none}
 .t-badge{padding:2px 10px;border-radius:20px;font-size:10px;font-weight:800;min-width:90px;text-align:center}
-.t-def{font-size:11px;color:#374151;line-height:1.5}
+.t-def{font-size:11px;color:var(--text-soft);line-height:1.5}
 .callout{background:#EFF6FF;border-left:4px solid var(--blue);padding:10px 14px;border-radius:0 6px 6px 0;margin:10px 0}
 .callout p{font-size:12px;color:#1E40AF;line-height:1.6}
 .callout strong{color:var(--header-bg)}
@@ -164,15 +224,17 @@ table.dataTable tbody tr:hover td{background:#EFF6FF!important}
 .scout-layout{display:grid;grid-template-columns:480px 1fr;gap:16px;align-items:start}
 .search-box-wb{padding:10px 14px 10px 38px;border:2px solid var(--grey-border);border-radius:6px;
                font-size:13px;font-family:inherit;width:100%;outline:none;transition:.2s;
-               background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E") no-repeat 10px center}
+               color:var(--text);
+               background:var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E") no-repeat 10px center}
 .search-box-wb:focus{border-color:var(--blue)}
-.ac-dd{position:absolute;background:#fff;border:1px solid var(--grey-border);border-radius:8px;
-       box-shadow:0 10px 28px rgba(0,0,0,.12);z-index:200;width:100%;max-height:280px;overflow-y:auto;top:calc(100%+4px)}
-.ac-item{padding:9px 14px;cursor:pointer;border-bottom:1px solid #F9FAFB;transition:.1s}
-.ac-item:hover{background:#F0F7FF} .ac-item:last-child{border:none}
-.ac-name{font-size:13px;font-weight:700} .ac-meta{font-size:10px;color:var(--grey);margin-top:1px}
+.ac-dd{position:absolute;background:var(--surface);border:1px solid var(--grey-border);border-radius:8px;
+       box-shadow:var(--shadow-lg);z-index:200;width:100%;max-height:280px;overflow-y:auto;top:calc(100%+4px)}
+.ac-item{padding:9px 14px;cursor:pointer;border-bottom:1px solid var(--border-soft);transition:.1s}
+.ac-item:hover{background:var(--surface-hover)} .ac-item:last-child{border:none}
+.ac-name{font-size:13px;font-weight:700;color:var(--text)} .ac-meta{font-size:10px;color:var(--text-mute);margin-top:1px}
 .player-card{background:linear-gradient(135deg,var(--header-bg) 0%,#1d4ed8 100%);
-             color:#fff;border-radius:8px;padding:18px 22px;margin-bottom:14px}
+             background-image:var(--sheen),linear-gradient(135deg,var(--header-bg) 0%,#1d4ed8 100%);
+             color:#fff;border-radius:8px;padding:18px 22px;margin-bottom:14px;box-shadow:var(--shadow-md)}
 .pc-top{display:flex;align-items:center;gap:14px;margin-bottom:14px}
 .pc-avatar{width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,.18);
            border:2px solid rgba(255,255,255,.3);display:flex;align-items:center;
@@ -191,33 +253,33 @@ table.dataTable tbody tr:hover td{background:#EFF6FF!important}
 /* ── CHARTS ── */
 .charts-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .charts-3{display:grid;grid-template-columns:2fr 1fr 1fr;gap:14px}
-.chart-card{background:#fff;border:1px solid var(--grey-border);border-radius:8px;padding:16px}
-.chart-card h4{font-size:11px;font-weight:700;color:var(--grey);text-transform:uppercase;
+.chart-card{background:var(--surface);border:1px solid var(--grey-border);border-radius:8px;padding:16px;box-shadow:var(--shadow-sm)}
+.chart-card h4{font-size:11px;font-weight:700;color:var(--text-mute);text-transform:uppercase;
                letter-spacing:.5px;margin-bottom:12px;border-left:3px solid var(--blue);padding-left:8px}
 
 /* ── POSITION ANALYSIS ── */
 .pos-pills{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
 .pos-pill{padding:5px 14px;border-radius:20px;border:1.5px solid var(--grey-border);
-          background:#fff;cursor:pointer;font-size:11px;font-weight:700;color:var(--grey);transition:.15s}
+          background:var(--surface);cursor:pointer;font-size:11px;font-weight:700;color:var(--text-mute);transition:.15s}
 .pos-pill:hover,.pos-pill.active{background:var(--blue);border-color:var(--blue);color:#fff}
 
 /* ── SQUAD SHEET ── */
 .squad-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:16px}
 .squad-pos-col h5{font-size:9px;font-weight:800;text-align:center;background:var(--header-bg);
                   color:#fff;padding:4px;border-radius:4px 4px 0 0;text-transform:uppercase;letter-spacing:.4px}
-.squad-player{padding:5px 6px;font-size:10px;background:#fff;border:1px solid var(--grey-border);
-              border-top:none;text-align:center;cursor:default;transition:.1s}
-.squad-player:hover{background:#EFF6FF}
+.squad-player{padding:5px 6px;font-size:10px;background:var(--surface);border:1px solid var(--grey-border);
+              border-top:none;text-align:center;cursor:default;transition:.1s;color:var(--text)}
+.squad-player:hover{background:var(--surface-hover)}
 .squad-player .sp-name{font-weight:600;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .squad-player .sp-q{font-size:9px;font-weight:700;margin-top:1px}
 
 /* ── FILTER ROW ── */
 .filter-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
-.filter-row label{font-size:11px;font-weight:600;color:var(--grey)}
+.filter-row label{font-size:11px;font-weight:600;color:var(--text-mute)}
 .filter-sel{padding:5px 10px;border-radius:5px;border:1.5px solid var(--grey-border);
-            font-size:11px;font-family:inherit;background:#fff}
+            font-size:11px;font-family:inherit;background:var(--surface);color:var(--text)}
 .filter-sel:focus{border-color:var(--blue);outline:none}
-.filter-count{font-size:11px;color:var(--grey);margin-left:auto}
+.filter-count{font-size:11px;color:var(--text-mute);margin-left:auto}
 
 /* ── TOOLTIP ── */
 #tt{position:fixed;display:none;background:#1E3A8A;color:#fff;
@@ -249,8 +311,9 @@ table.dataTable tbody tr{cursor:pointer}
 
 /* ── SCROLLBAR ── */
 ::-webkit-scrollbar{width:6px;height:6px}
-::-webkit-scrollbar-track{background:#F3F4F6}
-::-webkit-scrollbar-thumb{background:#CBD5E0;border-radius:3px}
+::-webkit-scrollbar-track{background:var(--surface-2)}
+::-webkit-scrollbar-thumb{background:var(--grey-border);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--text-mute)}
 
 /* ── SHORTLIST STAR ── */
 .star-btn{background:none;border:none;cursor:pointer;font-size:14px;padding:0 2px;
@@ -263,37 +326,37 @@ table.dataTable tbody tr{cursor:pointer}
 /* ── MODAL ── */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1000;
                display:flex;align-items:center;justify-content:center}
-.modal-box{background:#fff;border-radius:12px;box-shadow:0 24px 60px rgba(0,0,0,.25);
+.modal-box{background:var(--surface);color:var(--text);border-radius:12px;box-shadow:var(--shadow-lg);
            padding:24px 28px;position:relative;max-height:92vh;overflow-y:auto}
 .modal-close{position:absolute;top:12px;right:16px;background:none;border:none;
-             font-size:20px;cursor:pointer;color:var(--grey)}
+             font-size:20px;cursor:pointer;color:var(--text-mute)}
 
 /* ── COMPARE ── */
 .compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;min-width:820px}
-.cmp-header{text-align:center;font-weight:800;font-size:13px;color:var(--header-bg);margin-bottom:8px}
+.cmp-header{text-align:center;font-weight:800;font-size:13px;color:var(--heading);margin-bottom:8px}
 .cmp-stat-row{display:flex;justify-content:space-between;align-items:center;
-              padding:5px 0;border-bottom:1px solid #F1F5F9;font-size:12px}
-.cmp-winner{font-weight:800;color:#166534}
+              padding:5px 0;border-bottom:1px solid var(--border-soft);font-size:12px;color:var(--text)}
+.cmp-winner{font-weight:800;color:var(--pos-text)}
 .cmp-loser{color:#9CA3AF}
 
 /* ── NOTES ── */
 .notes-area{width:100%;min-height:120px;border:1.5px solid var(--grey-border);border-radius:6px;
-            font-family:inherit;font-size:13px;padding:10px;resize:vertical}
+            font-family:inherit;font-size:13px;padding:10px;resize:vertical;background:var(--surface);color:var(--text)}
 .notes-area:focus{border-color:var(--blue);outline:none}
 .note-badge{display:inline-block;width:7px;height:7px;border-radius:50%;
             background:#F59E0B;margin-left:4px;vertical-align:middle}
 
 /* ── EXEC SUMMARY ── */
-.exec-pos-block{background:#fff;border:1px solid var(--grey-border);border-radius:8px;
-                overflow:hidden;margin-bottom:14px}
+.exec-pos-block{background:var(--surface);border:1px solid var(--grey-border);border-radius:8px;
+                overflow:hidden;margin-bottom:14px;box-shadow:var(--shadow-sm)}
 .exec-pos-hdr{padding:8px 16px;font-size:11px;font-weight:800;text-transform:uppercase;
               letter-spacing:.5px;color:#fff;display:flex;align-items:center;gap:10px}
-.exec-player-row{display:flex;align-items:center;padding:10px 16px;border-bottom:1px solid #F5F7FF;gap:12px}
+.exec-player-row{display:flex;align-items:center;padding:10px 16px;border-bottom:1px solid var(--border-soft);gap:12px;color:var(--text)}
 .exec-player-row:last-child{border-bottom:none}
-.exec-player-row:hover{background:#F8FAFF}
-.exec-rank{font-size:18px;font-weight:900;color:#CBD5E0;min-width:24px}
+.exec-player-row:hover{background:var(--surface-hover)}
+.exec-rank{font-size:18px;font-weight:900;color:var(--grey-border);min-width:24px}
 .exec-name{font-weight:700;font-size:13px;flex:1}
-.exec-detail{font-size:10px;color:var(--grey);margin-top:2px}
+.exec-detail{font-size:10px;color:var(--text-mute);margin-top:2px}
 .exec-scores{display:flex;gap:10px;align-items:center}
 .exec-badge{padding:2px 8px;border-radius:4px;font-size:10px;font-weight:800}
 
@@ -324,6 +387,7 @@ table.dataTable tbody tr{cursor:pointer}
     <span>📊 1,085 candidates</span>
   </div>
   <div class="wb-actions">
+    <button class="wb-btn theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle dark mode">🌙</button>
     <button class="wb-btn" onclick="window.print()">🖨 Print</button>
     <button class="wb-btn" onclick="exportCSV()">⬇ Export CSV</button>
   </div>
@@ -422,7 +486,7 @@ table.dataTable tbody tr{cursor:pointer}
         <div class="callout">
           <p><strong>Core insight:</strong> Market values in lower leagues are driven by reputation, agent relationships, and past narratives — NOT objective statistical output. Jamestown Analytics exploits this gap systematically.</p>
         </div>
-        <p style="font-size:12px;color:#374151;line-height:1.8;margin-top:10px">
+        <p style="font-size:12px;color:var(--text-soft);line-height:1.8;margin-top:10px">
           <strong>Jamestown Analytics</strong> is the methodology — developed and refined through three clubs that proved data-driven recruitment works at every level: <strong>Brighton &amp; Hove Albion</strong>, <strong>Heart of Midlothian (Hearts)</strong>, and <strong>St. Gilloise</strong>. Marc Lamberts applies this framework through <strong>Waltzing Analytics</strong> for FC Hradec Králové.
           <br><br>
           The approach requires <strong>ignoring reputation</strong>, <strong>ignoring league prestige bias</strong>, and <strong>trusting the numbers</strong> when they conflict with conventional wisdom. Jamestown proved this works across multiple leagues and countries — Waltzing Analytics now applies the same logic to the Czech and Slovak pyramid.
@@ -526,7 +590,7 @@ table.dataTable tbody tr{cursor:pointer}
     <div class="section">
       <div class="section-hdr"><h3>vs Hradec Gap — Upgrade Quantification</h3></div>
       <div class="section-body">
-        <p style="font-size:12px;color:#374151;line-height:1.8">
+        <p style="font-size:12px;color:var(--text-soft);line-height:1.8">
           The <strong>vs Hradec gap</strong> answers the question: <em>"By how much does this candidate exceed our current starters?"</em>
           We take the two Hradec players with the most minutes at each position (from Impect tracking data), average their quality percentile score,
           and subtract it from the candidate's SQS rank. A gap of <strong>+25</strong> means the candidate is at the 25th percentile better than the current starter — a meaningful, quantified upgrade.
@@ -554,7 +618,7 @@ table.dataTable tbody tr{cursor:pointer}
         <div class="callout">
           <p><strong>Core insight:</strong> The Lamberts Index and SQS are only as trustworthy as the data behind them. A high LI built on 400 minutes and one unconfirmed data source is a lead, not a conclusion — <strong>Scouting Uncertainty</strong> makes that distinction explicit instead of hiding it inside a single ranking number.</p>
         </div>
-        <p style="font-size:12px;color:#374151;line-height:1.8;margin-top:10px">
+        <p style="font-size:12px;color:var(--text-soft);line-height:1.8;margin-top:10px">
           Every candidate gets an uncertainty score (0–100, higher = less confidence) built from three factors, shown wherever the candidate appears in the workbook and broken down in full on their Player Profile.
         </p>
         <table class="weight-table" style="margin-top:10px">
@@ -752,7 +816,7 @@ table.dataTable tbody tr{cursor:pointer}
     </div>
     <div id="profile-empty" style="text-align:center;padding:60px;color:var(--grey)">
       <div style="font-size:48px;margin-bottom:12px">🔍</div>
-      <div style="font-size:15px;font-weight:700;color:#374151">Search for a player to view their full profile</div>
+      <div style="font-size:15px;font-weight:700;color:var(--text-soft)">Search for a player to view their full profile</div>
       <div style="font-size:12px;margin-top:5px">Pizza plot · percentile breakdown · Marc Lamberts scout report</div>
     </div>
     <div id="profile-content" style="display:none">
@@ -770,7 +834,7 @@ table.dataTable tbody tr{cursor:pointer}
           </div>
           <div class="section">
             <div class="section-hdr"><h3>Marc Lamberts Scout Report</h3></div>
-            <div class="section-body" id="scoutReport" style="font-size:12px;line-height:1.8;color:#374151"></div>
+            <div class="section-body" id="scoutReport" style="font-size:12px;line-height:1.8;color:var(--text-soft)"></div>
           </div>
         </div>
       </div>
@@ -813,9 +877,9 @@ table.dataTable tbody tr{cursor:pointer}
         <div class="squad-grid" id="squadGrid"></div>
         <div style="font-size:11px;color:var(--grey);margin-top:8px">
           <strong>Quality colour:</strong>
-          <span style="color:#166534;font-weight:700">■ ≥70th</span> Elite &nbsp;
-          <span style="color:#92400E;font-weight:700">■ ≥40th</span> Average &nbsp;
-          <span style="color:#991B1B;font-weight:700">■ &lt;40th</span> Below average
+          <span style="color:var(--pos-text);font-weight:700">■ ≥70th</span> Elite &nbsp;
+          <span style="color:var(--warn-text);font-weight:700">■ ≥40th</span> Average &nbsp;
+          <span style="color:var(--neg-text);font-weight:700">■ &lt;40th</span> Below average
         </div>
       </div>
     </div>
@@ -1001,11 +1065,11 @@ table.dataTable tbody tr{cursor:pointer}
           </div>
         </div>
         <div style="padding:16px 18px">
-          <p style="font-size:12px;color:#374151;line-height:1.8">Every player gets a <strong>position-specific composite score</strong> built from their Wyscout per-90 statistics, weighted by what matters most at each position — finishing for forwards, defensive duels for centre-backs, progressive passing for midfielders.</p>
+          <p style="font-size:12px;color:var(--text-soft);line-height:1.8">Every player gets a <strong>position-specific composite score</strong> built from their Wyscout per-90 statistics, weighted by what matters most at each position — finishing for forwards, defensive duels for centre-backs, progressive passing for midfielders.</p>
           <div style="background:#EFF6FF;border-radius:6px;padding:10px 14px;margin:10px 0;font-family:monospace;font-size:12px;color:var(--header-bg);text-align:center;font-weight:700">
             SQS = Σ (metric × weight) × league_coefficient
           </div>
-          <p style="font-size:12px;color:#374151;line-height:1.8">League coefficients (CZ 0.90 · CZ II 0.82 · Slovakia 0.78 · U19 0.65) ensure a CZ player scoring 80 raw ranks higher than a CZ II equivalent — correctly reflecting competition level. The final SQS is a <strong>0–100 percentile rank</strong> within each position group across all four leagues.</p>
+          <p style="font-size:12px;color:var(--text-soft);line-height:1.8">League coefficients (CZ 0.90 · CZ II 0.82 · Slovakia 0.78 · U19 0.65) ensure a CZ player scoring 80 raw ranks higher than a CZ II equivalent — correctly reflecting competition level. The final SQS is a <strong>0–100 percentile rank</strong> within each position group across all four leagues.</p>
           <div style="margin-top:12px;padding:10px 14px;background:#F8FAFC;border-radius:6px;font-size:11px;color:#374151">
             <strong>Where you see it:</strong> SQS column · Value Map · By Position · Lamberts Model chart
           </div>
@@ -1021,11 +1085,11 @@ table.dataTable tbody tr{cursor:pointer}
           </div>
         </div>
         <div style="padding:16px 18px">
-          <p style="font-size:12px;color:#374151;line-height:1.8">The core insight: <strong>market values in lower leagues are driven by narrative, not output.</strong> The Lamberts Index measures the gap between what a player produces statistically and what the market charges for them.</p>
+          <p style="font-size:12px;color:var(--text-soft);line-height:1.8">The core insight: <strong>market values in lower leagues are driven by narrative, not output.</strong> The Lamberts Index measures the gap between what a player produces statistically and what the market charges for them.</p>
           <div style="background:#D1FAE5;border-radius:6px;padding:10px 14px;margin:10px 0;font-family:monospace;font-size:12px;color:#065F46;text-align:center;font-weight:700">
             LI = SQS Percentile Rank − Market Value Percentile Rank
           </div>
-          <p style="font-size:12px;color:#374151;line-height:1.8"><strong>Positive LI</strong> = player produces more than they cost. <strong>LI ≥ 30</strong> = Elite Value — strong buy signal. <strong>LI ≥ 20</strong> = High Value. The higher the LI, the bigger the market inefficiency being exploited.</p>
+          <p style="font-size:12px;color:var(--text-soft);line-height:1.8"><strong>Positive LI</strong> = player produces more than they cost. <strong>LI ≥ 30</strong> = Elite Value — strong buy signal. <strong>LI ≥ 20</strong> = High Value. The higher the LI, the bigger the market inefficiency being exploited.</p>
           <div style="margin-top:12px;padding:10px 14px;background:#F8FAFC;border-radius:6px;font-size:11px;color:#374151">
             <strong>Where you see it:</strong> LI column · Value Tier (Elite/High/Value/Fair/Over) · Value Map · all ranking sorts
           </div>
@@ -1041,12 +1105,12 @@ table.dataTable tbody tr{cursor:pointer}
           </div>
         </div>
         <div style="padding:16px 18px">
-          <p style="font-size:12px;color:#374151;line-height:1.8">Wyscout per-90 stats can be inflated by playing style, team context, or small samples. <strong>Impect packing scores</strong> measure something different — how many opponents a player bypasses with the ball. Two independent data sources that independently agree = high confidence.</p>
+          <p style="font-size:12px;color:var(--text-soft);line-height:1.8">Wyscout per-90 stats can be inflated by playing style, team context, or small samples. <strong>Impect packing scores</strong> measure something different — how many opponents a player bypasses with the ball. Two independent data sources that independently agree = high confidence.</p>
           <div style="background:#F5F3FF;border-radius:6px;padding:10px 14px;margin:10px 0;font-size:12px;color:#4C1D95;text-align:center;font-weight:700">
             ●● Dual Signal = Wyscout SQS ≥ 60 AND Impect ≥ 60<br>
             ◆ Impect Gem = Impect ≥ 60, SQS &lt; 60 (hidden value)
           </div>
-          <p style="font-size:12px;color:#374151;line-height:1.8">Dual-signal players reach <strong>Priority 1</strong> in the Recommendations tab. Gems are flagged for manual scouting. <strong>Conviction Score</strong> = avg(SQS, Impect percentile) — the single best number for ranking recommendations.</p>
+          <p style="font-size:12px;color:var(--text-soft);line-height:1.8">Dual-signal players reach <strong>Priority 1</strong> in the Recommendations tab. Gems are flagged for manual scouting. <strong>Conviction Score</strong> = avg(SQS, Impect percentile) — the single best number for ranking recommendations.</p>
           <div style="margin-top:12px;padding:10px 14px;background:#F8FAFC;border-radius:6px;font-size:11px;color:#374151">
             <strong>Where you see it:</strong> Impect tab · Signal column · Recommendations · Conviction score
           </div>
@@ -1062,11 +1126,11 @@ table.dataTable tbody tr{cursor:pointer}
           </div>
         </div>
         <div style="padding:16px 18px">
-          <p style="font-size:12px;color:#374151;line-height:1.8">Finding an undervalued player is only useful if they're actually <strong>better than what we already have</strong>. The vs Hradec gap measures exactly that — how much a candidate exceeds the current Hradec starter at their position.</p>
+          <p style="font-size:12px;color:var(--text-soft);line-height:1.8">Finding an undervalued player is only useful if they're actually <strong>better than what we already have</strong>. The vs Hradec gap measures exactly that — how much a candidate exceeds the current Hradec starter at their position.</p>
           <div style="background:#FEF3C7;border-radius:6px;padding:10px 14px;margin:10px 0;font-family:monospace;font-size:12px;color:#92400E;text-align:center;font-weight:700">
             Gap = Player SQS − avg(top-2 HK starters at position)
           </div>
-          <p style="font-size:12px;color:#374151;line-height:1.8"><strong>Gap ≥ +10 = Clear Upgrade</strong> — immediate first-team improvement. Near-zero = Rotational. Negative = Depth only. The gap is calculated from Impect tracking data for Hradec's actual 2025-26 squad at each position.</p>
+          <p style="font-size:12px;color:var(--text-soft);line-height:1.8"><strong>Gap ≥ +10 = Clear Upgrade</strong> — immediate first-team improvement. Near-zero = Rotational. Negative = Depth only. The gap is calculated from Impect tracking data for Hradec's actual 2025-26 squad at each position.</p>
           <div style="margin-top:12px;padding:10px 14px;background:#F8FAFC;border-radius:6px;font-size:11px;color:#374151">
             <strong>Where you see it:</strong> vs HK column · Clear Upgrades tab · Squad Baseline · Exec Summary
           </div>
@@ -1081,28 +1145,28 @@ table.dataTable tbody tr{cursor:pointer}
         <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:0">
           <div style="text-align:center;padding:14px 10px;border-right:1px solid #F1F5F9">
             <div style="font-size:22px;font-weight:900;color:var(--blue)">①</div>
-            <div style="font-size:11px;font-weight:800;color:var(--header-bg);margin:6px 0 4px">Input</div>
-            <div style="font-size:11px;color:#374151;line-height:1.6">Wyscout per-90 stats + Impect packing scores for all players in CZ, CZ II, Slovakia, CZ U19</div>
+            <div style="font-size:11px;font-weight:800;color:var(--heading);margin:6px 0 4px">Input</div>
+            <div style="font-size:11px;color:var(--text-soft);line-height:1.6">Wyscout per-90 stats + Impect packing scores for all players in CZ, CZ II, Slovakia, CZ U19</div>
           </div>
           <div style="text-align:center;padding:14px 10px;border-right:1px solid #F1F5F9">
             <div style="font-size:22px;font-weight:900;color:var(--blue)">②</div>
-            <div style="font-size:11px;font-weight:800;color:var(--header-bg);margin:6px 0 4px">Score</div>
-            <div style="font-size:11px;color:#374151;line-height:1.6">Compute SQS (Pillar 1) per position. Apply league difficulty. Rank across all four leagues.</div>
+            <div style="font-size:11px;font-weight:800;color:var(--heading);margin:6px 0 4px">Score</div>
+            <div style="font-size:11px;color:var(--text-soft);line-height:1.6">Compute SQS (Pillar 1) per position. Apply league difficulty. Rank across all four leagues.</div>
           </div>
           <div style="text-align:center;padding:14px 10px;border-right:1px solid #F1F5F9">
             <div style="font-size:22px;font-weight:900;color:var(--blue)">③</div>
-            <div style="font-size:11px;font-weight:800;color:var(--header-bg);margin:6px 0 4px">Edge</div>
-            <div style="font-size:11px;color:#374151;line-height:1.6">Calculate Lamberts Index (Pillar 2) — SQS rank minus market value rank. Tier the market inefficiency.</div>
+            <div style="font-size:11px;font-weight:800;color:var(--heading);margin:6px 0 4px">Edge</div>
+            <div style="font-size:11px;color:var(--text-soft);line-height:1.6">Calculate Lamberts Index (Pillar 2) — SQS rank minus market value rank. Tier the market inefficiency.</div>
           </div>
           <div style="text-align:center;padding:14px 10px;border-right:1px solid #F1F5F9">
             <div style="font-size:22px;font-weight:900;color:var(--blue)">④</div>
-            <div style="font-size:11px;font-weight:800;color:var(--header-bg);margin:6px 0 4px">Validate</div>
-            <div style="font-size:11px;color:#374151;line-height:1.6">Cross-reference Impect (Pillar 3). Flag Dual Signal and Gems. Compute Conviction Score.</div>
+            <div style="font-size:11px;font-weight:800;color:var(--heading);margin:6px 0 4px">Validate</div>
+            <div style="font-size:11px;color:var(--text-soft);line-height:1.6">Cross-reference Impect (Pillar 3). Flag Dual Signal and Gems. Compute Conviction Score.</div>
           </div>
           <div style="text-align:center;padding:14px 10px">
             <div style="font-size:22px;font-weight:900;color:#065F46">⑤</div>
-            <div style="font-size:11px;font-weight:800;color:var(--header-bg);margin:6px 0 4px">Recommend</div>
-            <div style="font-size:11px;color:#374151;line-height:1.6">Apply HK gap (Pillar 4). P1 = Dual + Clear Upgrade. P2 = Dual + Rotational. Watch = Gem.</div>
+            <div style="font-size:11px;font-weight:800;color:var(--heading);margin:6px 0 4px">Recommend</div>
+            <div style="font-size:11px;color:var(--text-soft);line-height:1.6">Apply HK gap (Pillar 4). P1 = Dual + Clear Upgrade. P2 = Dual + Rotational. Watch = Gem.</div>
           </div>
         </div>
       </div>
@@ -1110,7 +1174,7 @@ table.dataTable tbody tr{cursor:pointer}
 
     <!-- Inspiration note -->
     <div style="background:#F8FAFC;border:1px solid var(--grey-border);border-radius:8px;padding:16px 20px;font-size:12px;color:#6B7280;line-height:1.8">
-      <strong style="color:#374151">Inspiration:</strong> The Waltzing Analytics model draws on the Jamestown Analytics philosophy — pioneered through work at Brighton &amp; Hove Albion (the statistical edge-finding approach), Heart of Midlothian (event-data dual validation), and Royale Union St. Gilloise (mid-tier market targeting). These clubs proved the principles work. This model applies them as one integrated system for the Czech and Slovak football pyramid.
+      <strong style="color:var(--text-soft)">Inspiration:</strong> The Waltzing Analytics model draws on the Jamestown Analytics philosophy — pioneered through work at Brighton &amp; Hove Albion (the statistical edge-finding approach), Heart of Midlothian (event-data dual validation), and Royale Union St. Gilloise (mid-tier market targeting). These clubs proved the principles work. This model applies them as one integrated system for the Czech and Slovak football pyramid.
     </div>
   </div>
 
@@ -1160,7 +1224,7 @@ table.dataTable tbody tr{cursor:pointer}
     </div>
     <div id="shortlist-empty" style="text-align:center;padding:60px;color:var(--grey)">
       <div style="font-size:48px;margin-bottom:12px">⭐</div>
-      <div style="font-size:15px;font-weight:700;color:#374151">No players shortlisted yet</div>
+      <div style="font-size:15px;font-weight:700;color:var(--text-soft)">No players shortlisted yet</div>
       <div style="font-size:12px;margin-top:5px">Click the ★ button on any player row — Recommendations, Clear Upgrades, All Targets, Impect, By Position or a Player Profile — to add them here</div>
     </div>
     <div id="shortlist-content" style="display:none">
@@ -1177,7 +1241,7 @@ table.dataTable tbody tr{cursor:pointer}
 <div id="compareModal" class="modal-overlay" style="display:none">
   <div class="modal-box" style="min-width:860px;max-width:96vw">
     <button class="modal-close" onclick="document.getElementById('compareModal').style.display='none'">✕</button>
-    <h3 style="font-size:15px;font-weight:900;color:var(--header-bg);margin-bottom:16px">Player Comparison</h3>
+    <h3 style="font-size:15px;font-weight:900;color:var(--heading);margin-bottom:16px">Player Comparison</h3>
     <div id="compareContent"></div>
   </div>
 </div>
@@ -1185,7 +1249,7 @@ table.dataTable tbody tr{cursor:pointer}
 <div id="notesModal" class="modal-overlay" style="display:none">
   <div class="modal-box" style="width:420px">
     <button class="modal-close" onclick="document.getElementById('notesModal').style.display='none'">✕</button>
-    <h3 style="font-size:14px;font-weight:800;color:var(--header-bg);margin-bottom:4px" id="notesModalTitle">Scout Notes</h3>
+    <h3 style="font-size:14px;font-weight:800;color:var(--heading);margin-bottom:4px" id="notesModalTitle">Scout Notes</h3>
     <p style="font-size:11px;color:var(--grey);margin-bottom:10px" id="notesModalSub"></p>
     <textarea class="notes-area" id="notesTextarea" placeholder="Add scouting notes…"></textarea>
     <div style="display:flex;gap:8px;margin-top:10px;justify-content:flex-end">
@@ -1270,6 +1334,33 @@ function uncBadge(d){
 }
 
 // ══════════════════════════════════════════════════════════════════════════
+// THEME (light / dark) — chart colour helpers. Charts are Canvas-drawn, so
+// they can't pick up CSS variables directly; these helpers + applyChartTheme()
+// keep them in sync with the data-theme attribute set on <html>.
+// ══════════════════════════════════════════════════════════════════════════
+function isDarkTheme(){ return document.documentElement.getAttribute('data-theme')==='dark'; }
+function gridColor(){ return isDarkTheme() ? 'rgba(255,255,255,.08)' : '#F9FAFB'; }
+function axisTextColor(){ return isDarkTheme() ? '#93A1B7' : '#6B7280'; }
+const ALL_CHARTS=[];
+function regChart(c){ ALL_CHARTS.push(c); return c; }
+function applyChartTheme(chart){
+  if(!chart || !chart.options) return;
+  const grid=gridColor(), text=axisTextColor();
+  if(chart.options.scales){
+    Object.values(chart.options.scales).forEach(sc=>{
+      if(sc.grid) sc.grid.color=grid;
+      if(sc.ticks) sc.ticks.color=text;
+      if(sc.title) sc.title.color=text;
+    });
+  }
+  if(chart.options.plugins && chart.options.plugins.legend && chart.options.plugins.legend.labels){
+    chart.options.plugins.legend.labels.color=text;
+  }
+  chart.update('none');
+}
+if(typeof Chart!=='undefined'){ Chart.defaults.color=axisTextColor(); Chart.defaults.borderColor=gridColor(); }
+
+// ══════════════════════════════════════════════════════════════════════════
 // SHORTLIST STATE (localStorage-backed) — declared early so every table
 // builder below (which renders star/notes buttons at build time) can read it.
 // ══════════════════════════════════════════════════════════════════════════
@@ -1284,8 +1375,9 @@ function showTT(h,e){tt.innerHTML=h;tt.style.display="block";tt.style.left=(e.cl
 document.addEventListener("mousemove",e=>{if(tt.style.display==="block"){tt.style.left=(e.clientX+14)+"px";tt.style.top=(e.clientY-14)+"px";}});
 function fmv(v){return v>0?"€"+v.toLocaleString():"—"}
 function fli(v){return (v>0?"+":"")+v}
-function sqsc(v){return v>=70?"#166534":v>=40?"#92400E":"#991B1B"}
-function lic(v){return v>=20?"#166534":v>=10?"#1A56DB":v>=0?"#92400E":"#991B1B"}
+function sqsc(v){return v>=70?"var(--pos-text)":v>=40?"var(--warn-text)":"var(--neg-text)"}
+function lic(v){return v>=20?"var(--pos-text)":v>=10?"var(--blue)":v>=0?"var(--warn-text)":"var(--neg-text)"}
+function gapColor(v){return v>0?"var(--pos-text)":"var(--neg-text)"}
 function inits(n){return n.split(" ").slice(0,2).map(w=>w[0]||"").join("").toUpperCase()}
 
 function tierCell(t){
@@ -1366,17 +1458,17 @@ function renderRecs(){
   };
 
   const html_rows = rows.map((p, i) => {
-    const conv_col = p._conv>=75?'#065F46':p._conv>=60?'#1E40AF':'#374151';
-    const li_col   = p.bi>=20?'#166534':p.bi>=-10?'#92400E':'#991B1B';
-    const gap_col  = p.gap>=20?'#166534':p.gap>=0?'#1E40AF':'#991B1B';
+    const conv_col = p._conv>=75?'var(--pos-text)':p._conv>=60?'var(--info-text)':'var(--text-soft)';
+    const li_col   = p.bi>=20?'var(--pos-text)':p.bi>=-10?'var(--warn-text)':'var(--neg-text)';
+    const gap_col  = p.gap>=20?'var(--pos-text)':p.gap>=0?'var(--info-text)':'var(--neg-text)';
     const pn = p.name.replace(/'/g,"\\'"), pt = p.team.replace(/'/g,"\\'");
     return `<tr style="cursor:pointer" onclick="goToProfile('${pn}','${pt}')">
       <td>${starBtn(p)}</td>
-      <td style="color:var(--grey)">${i+1}</td>
+      <td style="color:var(--text-mute)">${i+1}</td>
       <td style="font-weight:800">${p.name}${notes[starKey(p)]?'<span class="note-badge"></span>':''}</td>
       <td><span class="pos-badge pos-${p.pos}">${p.pos}</span></td>
       <td>${p.team}</td><td>${p.league}</td>
-      <td>${p.age<=23?`<strong style="color:#166534">${p.age}</strong>`:p.age}</td>
+      <td>${p.age<=23?`<strong style="color:var(--pos-text)">${p.age}</strong>`:p.age}</td>
       <td style="font-size:11px">${p.contract+(p.cflag==='2026'?'<span class="cflag"> ✦</span>':"")}</td>
       <td style="font-size:11px">${fmv(p)}</td>
       <td>${pbar(p.sqs,44)}</td>
@@ -1442,7 +1534,7 @@ function renderImpect(){
         ? '<span style="color:#6D28D9;font-weight:800">◆ Gem</span>'
         : '<span style="color:var(--grey)">—</span>';
     const mv = p.mv ? '€'+p.mv.toLocaleString() : '—';
-    const liCol = p.bi>=20?'#166534':p.bi>=-10?'#92400E':'#991B1B';
+    const liCol = p.bi>=20?'var(--pos-text)':p.bi>=-10?'var(--warn-text)':'var(--neg-text)';
     const pn=p.name.replace(/'/g,"\\'"), pt=p.team.replace(/'/g,"\\'");
     return `<tr style="cursor:pointer" onclick="goToProfile('${pn}','${pt}')">
       <td>${starBtn(p)}</td>
@@ -1569,11 +1661,11 @@ eliteU.slice(0,8).forEach(d=>{
   cumBudget+=d.mv;
   const over=cumBudget>1000000;
   budViz+=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;font-size:11px">
-    <span style="min-width:120px;font-weight:600;${over?"color:#991B1B":""}">${d.name}</span>
-    <div style="flex:1;height:12px;background:#E5E7EB;border-radius:3px;overflow:hidden">
+    <span style="min-width:120px;font-weight:600;${over?"color:var(--neg-text)":""}">${d.name}</span>
+    <div style="flex:1;height:12px;background:var(--grey-border);border-radius:3px;overflow:hidden">
       <div style="width:${w}%;height:100%;background:${over?"#C0392B":"#1E8449"};border-radius:3px"></div>
     </div>
-    <span style="min-width:70px;font-weight:700;${over?"color:#991B1B":"color:#166534"}">${fmv(d.mv)}</span>
+    <span style="min-width:70px;font-weight:700;${over?"color:var(--neg-text)":"color:var(--pos-text)"}">${fmv(d.mv)}</span>
   </div>`;
 });
 document.getElementById("budgetViz").innerHTML=budViz;
@@ -1605,11 +1697,11 @@ function makeBubbleDS(dataSet, yFn){
   }));
 }
 
-const sumScatter=new Chart(document.getElementById("sumScatter").getContext("2d"),{
+const sumScatter=regChart(new Chart(document.getElementById("sumScatter").getContext("2d"),{
   type:"bubble",data:{datasets:makeBubbleDS(DATA)},plugins:[quadrantPlugin],
   options:{responsive:true,plugins:{legend:{position:"top",labels:{boxWidth:8,font:{size:9}}},tooltip:{enabled:false}},
-    scales:{x:{title:{display:true,text:"Market Value (€k)",font:{size:10}},grid:{color:"#F9FAFB"},min:0},
-            y:{title:{display:true,text:"SQS Rank",font:{size:10}},min:0,max:100,grid:{color:"#F9FAFB"}}},
+    scales:{x:{title:{display:true,text:"Market Value (€k)",font:{size:10}},grid:{color:gridColor()},min:0},
+            y:{title:{display:true,text:"SQS Rank",font:{size:10}},min:0,max:100,grid:{color:gridColor()}}},
     onHover:(e,els)=>{
       if(!els.length){tt.style.display="none";return;}
       const d=sumScatter.data.datasets[els[0].datasetIndex].data[els[0].index]._d;
@@ -1619,39 +1711,39 @@ const sumScatter=new Chart(document.getElementById("sumScatter").getContext("2d"
         <div class="tt-r"><span class="tt-l">Uncertainty</span><span class="tt-v">${UNC_LABEL[d._unc.tier]} (${d._unc.score})</span></div>`,e.native);
     }
   }
-});
+}));
 
-new Chart(document.getElementById("sumDonut").getContext("2d"),{
+regChart(new Chart(document.getElementById("sumDonut").getContext("2d"),{
   type:"doughnut",
   data:{labels:["ELITE","HIGH","VALUE","FAIR","OVER"].map(t=>TL[t]),
     datasets:[{data:["ELITE","HIGH","VALUE","FAIR","OVER"].map(t=>TIER_CNT[t]),
       backgroundColor:["ELITE","HIGH","VALUE","FAIR","OVER"].map(t=>TC[t]),borderWidth:2,borderColor:"#fff"}]},
   options:{cutout:"60%",responsive:true,plugins:{legend:{position:"bottom",labels:{boxWidth:9,font:{size:9}}}}}
-});
+}));
 
-new Chart(document.getElementById("sumPos").getContext("2d"),{
+regChart(new Chart(document.getElementById("sumPos").getContext("2d"),{
   type:"bar",data:{labels:POS,datasets:[{data:POS.map(p=>POS_CNT[p]||0),
     backgroundColor:POS.map((_,i)=>`hsla(${[210,180,150,100,240,30,0][i]},60%,50%,0.75)`),borderRadius:4}]},
   options:{indexAxis:"y",responsive:true,plugins:{legend:{display:false}},
-    scales:{x:{grid:{color:"#F9FAFB"}},y:{grid:{display:false},ticks:{font:{size:10,weight:"700"}}}}}
-});
+    scales:{x:{grid:{color:gridColor()}},y:{grid:{display:false},ticks:{font:{size:10,weight:"700"}}}}}
+}));
 
 const lc={};DATA.forEach(d=>{lc[d.league]=(lc[d.league]||0)+1});
-new Chart(document.getElementById("sumLeague").getContext("2d"),{
+regChart(new Chart(document.getElementById("sumLeague").getContext("2d"),{
   type:"doughnut",
   data:{labels:Object.keys(lc),datasets:[{data:Object.values(lc),
     backgroundColor:{"CZ II":"#1A56DB","Slovakia":"#1E8449","Slovakia II":"#D4700A"},borderWidth:2,borderColor:"#fff"}]},
   options:{cutout:"58%",responsive:true,plugins:{legend:{position:"bottom",labels:{boxWidth:9,font:{size:9}}}}}
-});
+}));
 
 // ══════════════════════════════════════════════════════════════════════════
 // VALUE MAP SHEET
 // ══════════════════════════════════════════════════════════════════════════
-const vmScatter=new Chart(document.getElementById("vmScatter").getContext("2d"),{
+const vmScatter=regChart(new Chart(document.getElementById("vmScatter").getContext("2d"),{
   type:"bubble",data:{datasets:makeBubbleDS(DATA)},plugins:[quadrantPlugin],
   options:{responsive:true,plugins:{legend:{position:"top",labels:{boxWidth:9,font:{size:10}}},tooltip:{enabled:false}},
-    scales:{x:{title:{display:true,text:"Market Value (€k)",font:{size:10}},grid:{color:"#F9FAFB"},min:0},
-            y:{title:{display:true,text:"SQS Rank (0–100)",font:{size:10}},min:0,max:100,grid:{color:"#F9FAFB"}}},
+    scales:{x:{title:{display:true,text:"Market Value (€k)",font:{size:10}},grid:{color:gridColor()},min:0},
+            y:{title:{display:true,text:"SQS Rank (0–100)",font:{size:10}},min:0,max:100,grid:{color:gridColor()}}},
     onHover:(e,els)=>{
       if(!els.length){tt.style.display="none";return;}
       const d=vmScatter.data.datasets[els[0].datasetIndex].data[els[0].index]._d;
@@ -1661,15 +1753,15 @@ const vmScatter=new Chart(document.getElementById("vmScatter").getContext("2d"),
         <div class="tt-r"><span class="tt-l">Uncertainty</span><span class="tt-v">${UNC_LABEL[d._unc.tier]} (${d._unc.score})</span></div>`,e.native);
     }
   }
-});
+}));
 
-new Chart(document.getElementById("vmDonut").getContext("2d"),{
+regChart(new Chart(document.getElementById("vmDonut").getContext("2d"),{
   type:"doughnut",
   data:{labels:["ELITE","HIGH","VALUE","FAIR","OVER"].map(t=>TL[t]),
     datasets:[{data:["ELITE","HIGH","VALUE","FAIR","OVER"].map(t=>TIER_CNT[t]),
       backgroundColor:["ELITE","HIGH","VALUE","FAIR","OVER"].map(t=>TC[t]),borderWidth:2,borderColor:"#fff"}]},
   options:{cutout:"58%",responsive:true,plugins:{legend:{position:"bottom",labels:{boxWidth:9,font:{size:9}}}}}
-});
+}));
 
 // Beeswarm (value map)
 function drawBS(svgId){
@@ -1709,24 +1801,24 @@ drawBS("vmBeeswarm");
 // Age distribution
 const ages={};DATA.forEach(d=>{ages[d.age]=(ages[d.age]||0)+1;});
 const ageKeys=Object.keys(ages).sort((a,b)=>+a-+b);
-new Chart(document.getElementById("vmAge").getContext("2d"),{
+regChart(new Chart(document.getElementById("vmAge").getContext("2d"),{
   type:"bar",data:{labels:ageKeys,datasets:[{data:ageKeys.map(k=>ages[k]),
     backgroundColor:ageKeys.map(k=>+k<=23?"#1E844988":+k<=27?"#1A56DB88":"#D4700A88"),borderRadius:3}]},
-  options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:9}}},y:{grid:{color:"#F9FAFB"}}}}
-});
+  options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:9}}},y:{grid:{color:gridColor()}}}}
+}));
 
 // League LI grouped bar
 const leagues=["CZ","CZ II","Slovakia","CZ U19"];
 const leagueBI={};
 leagues.forEach(l=>{const ld=DATA.filter(d=>d.league===l);leagueBI[l]={elite:ld.filter(d=>d.tier==="ELITE").length,upg:ld.filter(d=>d.upgrade==="CLEAR UPGRADE").length,avg:ld.length?+(ld.reduce((s,d)=>s+d.bi,0)/ld.length).toFixed(1):0};});
-new Chart(document.getElementById("vmLeagueBI").getContext("2d"),{
+regChart(new Chart(document.getElementById("vmLeagueBI").getContext("2d"),{
   type:"bar",data:{labels:leagues,datasets:[
     {label:"Elite picks",data:leagues.map(l=>leagueBI[l].elite),backgroundColor:"#1E8449AA",borderRadius:3},
     {label:"Clear upgrades",data:leagues.map(l=>leagueBI[l].upg),backgroundColor:"#1A56DBAA",borderRadius:3},
   ]},
   options:{responsive:true,plugins:{legend:{position:"top",labels:{boxWidth:9,font:{size:9}}}},
-    scales:{x:{grid:{display:false}},y:{grid:{color:"#F9FAFB"}}}}
-});
+    scales:{x:{grid:{display:false}},y:{grid:{color:gridColor()}}}}
+}));
 
 // ══════════════════════════════════════════════════════════════════════════
 // CLEAR UPGRADES + ALL TARGETS (DataTables)
@@ -1752,14 +1844,14 @@ function mkRow(d,i){
     nameCell(d),
     `<span class="pos-badge pos-${d.pos}">${d.pos}</span>`,
     d.team,d.league,
-    d.age<=23?`<strong style="color:#166534">${d.age}</strong>`:d.age,
+    d.age<=23?`<strong style="color:var(--pos-text)">${d.age}</strong>`:d.age,
     d.contract+(d.cflag==="2026"?'<span class="cflag"> ✦</span>':""),
     fmv(d),
     pbar(d.sqs,sqsc(d.sqs)),
     impBar(d.imp_t_pct),
     `<strong style="color:${lic(d.bi)}">${fli(d.bi)}</strong>`,
     tierCell(d.tier),
-    `<strong style="color:${d.gap>0?"#166534":"#991B1B"}">${fli(d.gap)}</strong>`,
+    `<strong style="color:${gapColor(d.gap)}">${fli(d.gap)}</strong>`,
     sigCell(d),
     uncBadge(d),
     actionCell(d),
@@ -1772,13 +1864,13 @@ function mkRowShort(d,i){
     nameCell(d),
     `<strong style="color:var(--blue)">${d.pos}</strong>`,
     d.team,d.league,
-    d.age<=23?`<strong style="color:#166534">${d.age}</strong>`:d.age,
+    d.age<=23?`<strong style="color:var(--pos-text)">${d.age}</strong>`:d.age,
     d.contract+(d.cflag==="2026"?'<span class="cflag"> ✦</span>':""),
     fmv(d.mv),
     pbar(d.sqs,sqsc(d.sqs)),
     `<strong style="color:${lic(d.bi)}">${fli(d.bi)}</strong>`,
     tierCell(d.tier),upgCell(d.upgrade),
-    `<strong style="color:${d.gap>0?"#166534":"#991B1B"}">${fli(d.gap)}</strong>`,
+    `<strong style="color:${gapColor(d.gap)}">${fli(d.gap)}</strong>`,
     d.g90,d.xg90,d.a90,d.pp90,d.ddw+"%",d.int90,
     uncBadge(d),
     actionCell(d),
@@ -1910,34 +2002,40 @@ function arcPath(cx,cy,r1,r2,a1,a2){
   const big=(a2-a1)>Math.PI?1:0;
   return `M${x1},${y1}L${x2},${y2}A${r2},${r2},0,${big},1,${x3},${y3}L${x4},${y4}A${r1},${r1},0,${big},0,${x1},${y1}Z`;
 }
+let _currentProfilePlayer=null;
 function drawPizza(svgId,player){
   const metrics=PIZZA_META[player.pos]||[];if(!metrics.length)return;
+  _currentProfilePlayer=player;
+  const dk=isDarkTheme();
+  const bgFill=dk?'#0F1826':'#F8FAFC', guideStroke=dk?'#2A3A54':'#D1D5DB', ringStroke=dk?'#2A3A54':'#E5E7EB',
+        wedgeA=dk?'#17233A':'#EEF2FF', wedgeB=dk?'#141F33':'#E8EDF6', sepStroke=dk?'#0F1826':'#fff',
+        labelFill=dk?'#C7D0DE':'#374151', centerFill=dk?'#151E2E':'#fff', nameFill=dk?'#E5E9F0':'#111', posFill=dk?'#93A1B7':'#6B7280';
   const svg=d3.select("#"+svgId);svg.selectAll("*").remove();
   const cx=250,cy=250,iR=40,oR=178,lR=200,n=metrics.length,step=(2*Math.PI)/n,start=-Math.PI/2;
-  svg.append("rect").attr("width",500).attr("height",500).attr("fill","#F8FAFC").attr("rx",10);
-  [25,50,75].forEach(p=>{const r=iR+(oR-iR)*(p/100);svg.append("circle").attr("cx",cx).attr("cy",cy).attr("r",r).attr("fill","none").attr("stroke","#D1D5DB").attr("stroke-width",.6).attr("stroke-dasharray","2,4");});
-  svg.append("circle").attr("cx",cx).attr("cy",cy).attr("r",oR).attr("fill","none").attr("stroke","#E5E7EB").attr("stroke-width",1);
-  metrics.forEach((_,i)=>{const a1=start+i*step,a2=start+(i+1)*step;svg.append("path").attr("d",arcPath(cx,cy,iR,oR,a1,a2)).attr("fill",i%2===0?"#EEF2FF":"#E8EDF6").attr("stroke","#fff").attr("stroke-width",2);});
+  svg.append("rect").attr("width",500).attr("height",500).attr("fill",bgFill).attr("rx",10);
+  [25,50,75].forEach(p=>{const r=iR+(oR-iR)*(p/100);svg.append("circle").attr("cx",cx).attr("cy",cy).attr("r",r).attr("fill","none").attr("stroke",guideStroke).attr("stroke-width",.6).attr("stroke-dasharray","2,4");});
+  svg.append("circle").attr("cx",cx).attr("cy",cy).attr("r",oR).attr("fill","none").attr("stroke",ringStroke).attr("stroke-width",1);
+  metrics.forEach((_,i)=>{const a1=start+i*step,a2=start+(i+1)*step;svg.append("path").attr("d",arcPath(cx,cy,iR,oR,a1,a2)).attr("fill",i%2===0?wedgeA:wedgeB).attr("stroke",sepStroke).attr("stroke-width",2);});
   metrics.forEach((m,i)=>{
     const a1=start+i*step,a2=start+(i+1)*step,midA=(a1+a2)/2;
     const pct=parseFloat(player[m.key+"_pct"])||0,col=CC[m.cat]||"#1A56DB";
     const fillR=iR+(oR-iR)*(pct/100);
     if(fillR>iR+2){
       const mid2=iR+(fillR-iR)*.55;
-      svg.append("path").attr("d",arcPath(cx,cy,mid2,fillR,a1,a2)).attr("fill",col).attr("opacity",.92).attr("stroke","#fff").attr("stroke-width",1.5);
-      svg.append("path").attr("d",arcPath(cx,cy,iR,mid2,a1,a2)).attr("fill",col).attr("opacity",.45).attr("stroke","#fff").attr("stroke-width",1.5);
+      svg.append("path").attr("d",arcPath(cx,cy,mid2,fillR,a1,a2)).attr("fill",col).attr("opacity",.92).attr("stroke",sepStroke).attr("stroke-width",1.5);
+      svg.append("path").attr("d",arcPath(cx,cy,iR,mid2,a1,a2)).attr("fill",col).attr("opacity",.45).attr("stroke",sepStroke).attr("stroke-width",1.5);
     }
     if(pct>18&&fillR-iR>16){const lr2=iR+(fillR-iR)*.6;svg.append("text").attr("x",cx+lr2*Math.cos(midA)).attr("y",cy+lr2*Math.sin(midA)).attr("text-anchor","middle").attr("dy","0.35em").attr("font-size",8).attr("font-weight","800").attr("fill","#fff").text(Math.round(pct));}
     const lx=cx+lR*Math.cos(midA),ly=cy+lR*Math.sin(midA);
     const anc=Math.abs(Math.cos(midA))<.15?"middle":Math.cos(midA)<0?"end":"start";
     svg.append("line").attr("x1",cx+(oR+1)*Math.cos(midA)).attr("y1",cy+(oR+1)*Math.sin(midA)).attr("x2",cx+(oR+9)*Math.cos(midA)).attr("y2",cy+(oR+9)*Math.sin(midA)).attr("stroke",col).attr("stroke-width",1.5).attr("opacity",.7);
-    svg.append("text").attr("x",lx).attr("y",ly-5).attr("text-anchor",anc).attr("font-size",9).attr("font-weight","600").attr("fill","#374151").text(m.label);
+    svg.append("text").attr("x",lx).attr("y",ly-5).attr("text-anchor",anc).attr("font-size",9).attr("font-weight","600").attr("fill",labelFill).text(m.label);
     svg.append("text").attr("x",lx).attr("y",ly+7).attr("text-anchor",anc).attr("font-size",8.5).attr("font-weight","800").attr("fill",col).text(Math.round(pct)+"th");
   });
-  svg.append("circle").attr("cx",cx).attr("cy",cy).attr("r",iR).attr("fill","#fff").attr("stroke","#E5E7EB").attr("stroke-width",2);
+  svg.append("circle").attr("cx",cx).attr("cy",cy).attr("r",iR).attr("fill",centerFill).attr("stroke",ringStroke).attr("stroke-width",2);
   const ln=player.name.split(" ").slice(-1)[0].substring(0,9);
-  svg.append("text").attr("x",cx).attr("y",cy-12).attr("text-anchor","middle").attr("font-size",10).attr("font-weight","900").attr("fill","#111").text(ln);
-  svg.append("text").attr("x",cx).attr("y",cy+2).attr("text-anchor","middle").attr("font-size",8).attr("fill","#6B7280").text(player.pos);
+  svg.append("text").attr("x",cx).attr("y",cy-12).attr("text-anchor","middle").attr("font-size",10).attr("font-weight","900").attr("fill",nameFill).text(ln);
+  svg.append("text").attr("x",cx).attr("y",cy+2).attr("text-anchor","middle").attr("font-size",8).attr("fill",posFill).text(player.pos);
   svg.append("text").attr("x",cx).attr("y",cy+15).attr("text-anchor","middle").attr("font-size",9).attr("font-weight","800").attr("fill","#1A56DB").text(Math.round(player.sqs)+" SQS");
   document.getElementById("pizza-title").textContent=`${player.name} — ${player.pos} profile vs peers`;
   const cats=[...new Set(metrics.map(m=>m.cat))];
@@ -1987,8 +2085,8 @@ function renderProfile(d){
   document.getElementById("metricsPanel").innerHTML=mets.map(m=>{
     const pct=parseFloat(d[m.key+"_pct"])||0,raw=d[m.key]!==undefined?d[m.key]:"—";
     const col=pct>=70?"#166534":pct>=40?"#92400E":"#991B1B";
-    return `<div style="display:flex;align-items:center;padding:6px 0;border-bottom:1px solid #F9FAFB;gap:8px">
-      <span style="font-size:11px;color:#374151;flex:1">${m.label}</span>
+    return `<div style="display:flex;align-items:center;padding:6px 0;border-bottom:1px solid var(--border-soft);gap:8px">
+      <span style="font-size:11px;color:var(--text-soft);flex:1">${m.label}</span>
       <div style="width:90px;height:5px;background:#E5E7EB;border-radius:3px;overflow:hidden">
         <div style="width:${pct}%;height:100%;background:${col};border-radius:3px"></div></div>
       <span style="font-size:11px;font-weight:700;color:${col};min-width:28px;text-align:right">${Math.round(pct)}<sup style="font-size:8px">th</sup></span>
@@ -2075,7 +2173,7 @@ function renderPos(pos){
         backgroundColor:top20.map(d=>d.bi>=20?"#1E8449CC":d.bi>=10?"#1A56DBCC":d.bi>=0?"#D4700ACC":"#C0392BCC"),
         borderRadius:4}]},
     options:{indexAxis:"y",responsive:true,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>{const d=top20[ctx.dataIndex];return [`BI: ${fli(d.bi)}`,`SQS: ${d.sqs}`,fmv(d.mv),d.upgrade];}}}},
-      scales:{x:{grid:{color:"#F9FAFB"},title:{display:true,text:"Lamberts Index",font:{size:9}}},y:{grid:{display:false},ticks:{font:{size:9}}}}}
+      scales:{x:{grid:{color:gridColor()},title:{display:true,text:"Lamberts Index",font:{size:9}}},y:{grid:{display:false},ticks:{font:{size:9}}}}}
   });
   const tDS=["ELITE","HIGH","VALUE","FAIR","OVER"].map(t=>({
     label:TL[t],data:pd.filter(d=>d.tier===t).map(d=>({x:d.mv/1000,y:d.sqs,r:Math.max(2,Math.min(9,d.mins/300)),_d:d})),
@@ -2084,12 +2182,12 @@ function renderPos(pos){
   posCharts.posScatter=new Chart(document.getElementById("posScatter").getContext("2d"),{
     type:"bubble",data:{datasets:tDS},
     options:{responsive:true,plugins:{legend:{position:"top",labels:{boxWidth:8,font:{size:9}}},tooltip:{callbacks:{label:ctx=>{const d=ctx.raw._d;return [`${d.name}`,`SQS ${d.sqs} LI ${fli(d.bi)}`,fmv(d.mv)];} }}},
-      scales:{x:{grid:{color:"#F9FAFB"},title:{display:true,text:"Mkt Val (€k)",font:{size:9}},min:0},y:{min:0,max:100,grid:{color:"#F9FAFB"},title:{display:true,text:"SQS",font:{size:9}}}}}
+      scales:{x:{grid:{color:gridColor()},title:{display:true,text:"Mkt Val (€k)",font:{size:9}},min:0},y:{min:0,max:100,grid:{color:gridColor()},title:{display:true,text:"SQS",font:{size:9}}}}}
   });
   const ageC={};pd.forEach(d=>{ageC[d.age]=(ageC[d.age]||0)+1;});const ak=Object.keys(ageC).sort((a,b)=>+a-+b);
   posCharts.posAge=new Chart(document.getElementById("posAge").getContext("2d"),{
     type:"bar",data:{labels:ak,datasets:[{data:ak.map(k=>ageC[k]),backgroundColor:ak.map(k=>+k<=23?"#1E844988":+k<=27?"#1A56DB88":"#D4700A88"),borderRadius:3}]},
-    options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:9}}},y:{grid:{color:"#F9FAFB"}}}}
+    options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:9}}},y:{grid:{color:gridColor()}}}}
   });
   const ptC={};pd.forEach(d=>{ptC[d.tier]=(ptC[d.tier]||0)+1;});const tK=["ELITE","HIGH","VALUE","FAIR","OVER"].filter(t=>ptC[t]>0);
   posCharts.posTier=new Chart(document.getElementById("posTier").getContext("2d"),{
@@ -2243,13 +2341,13 @@ function renderShortlist(){
       <td><strong>${p.name}</strong><small style="display:block;color:#9CA3AF;font-size:10px">${p.position}</small></td>
       <td><span class="pos-badge pos-${p.pos}">${p.pos}</span></td>
       <td>${p.team}</td><td>${p.league}</td>
-      <td>${p.age<=23?`<strong style="color:#166534">${p.age}</strong>`:p.age}</td>
+      <td>${p.age<=23?`<strong style="color:var(--pos-text)">${p.age}</strong>`:p.age}</td>
       <td>${p.contract+(p.cflag==="2026"?'<span class="cflag"> ✦</span>':"")}</td>
       <td>${fmv(p)}</td>
       <td>${pbar(p.sqs,sqsc(p.sqs))}</td>
       <td>${impBar(p.imp_t_pct)}</td>
       <td><strong style="color:${lic(p.bi)}">${fli(p.bi)}</strong></td>
-      <td><strong style="color:${p.gap>0?"#166534":"#991B1B"}">${fli(p.gap)}</strong></td>
+      <td><strong style="color:${gapColor(p.gap)}">${fli(p.gap)}</strong></td>
       <td><span style="font-size:10px;font-weight:700">${PLAB[pri]||''}</span></td>
       <td>${uncBadge(p)}</td>
       <td><button class="wb-btn" onclick="openNotes('${p.name.replace(/'/g,"\\'")}','${p.team.replace(/'/g,"\\'")}')">
@@ -2309,9 +2407,9 @@ function showCompare(){
   document.getElementById('compareContent').innerHTML = `
     <table style="width:100%;border-collapse:collapse">
       <thead><tr>
-        <th style="text-align:right;padding:0 14px 10px 0;color:var(--header-bg);font-size:13px;font-weight:900;width:40%">${hdr(a)}</th>
+        <th style="text-align:right;padding:0 14px 10px 0;color:var(--heading);font-size:13px;font-weight:900;width:40%">${hdr(a)}</th>
         <th style="width:20%;text-align:center"></th>
-        <th style="text-align:left;padding:0 0 10px 14px;color:var(--header-bg);font-size:13px;font-weight:900;width:40%">${hdr(b)}</th>
+        <th style="text-align:left;padding:0 0 10px 14px;color:var(--heading);font-size:13px;font-weight:900;width:40%">${hdr(b)}</th>
       </tr></thead>
       <tbody>${rows}</tbody>
     </table>
@@ -2425,7 +2523,7 @@ function exportShortlist(){
   const el = document.getElementById('sumAgeLI');
   if(!el) return;
   const upgrades = DATA.filter(d=>d.upgrade==='CLEAR UPGRADE');
-  new Chart(el.getContext('2d'),{
+  regChart(new Chart(el.getContext('2d'),{
     type:'scatter',
     data:{datasets:POS.map((p,i)=>({
       label:p,
@@ -2437,11 +2535,11 @@ function exportShortlist(){
       plugins:{legend:{position:'top',labels:{boxWidth:8,font:{size:9}}},
         tooltip:{callbacks:{label:ctx=>{const d=ctx.raw._d;return [`${d.name} (${d.pos})`,`Age ${d.age} · LI ${fli(d.bi)}`,d.team];} }}},
       scales:{
-        x:{title:{display:true,text:'Age',font:{size:10}},min:16,max:32,grid:{color:'#F9FAFB'}},
-        y:{title:{display:true,text:'Lamberts Index',font:{size:10}},grid:{color:'#F9FAFB'}}
+        x:{title:{display:true,text:'Age',font:{size:10}},min:16,max:32,grid:{color:gridColor()}},
+        y:{title:{display:true,text:'Lamberts Index',font:{size:10}},grid:{color:gridColor()}}
       }
     }
-  });
+  }));
 })();
 
 // ══════════════════════════════════════════════════════════════════════════
@@ -2483,6 +2581,29 @@ function exportShortlist(){
   });
 })();
 
+
+// ══════════════════════════════════════════════════════════════════════════
+// THEME TOGGLE
+// ══════════════════════════════════════════════════════════════════════════
+function updateThemeToggleBtn(){
+  const btn=document.getElementById('themeToggle');
+  if(!btn) return;
+  const dark=isDarkTheme();
+  btn.textContent=dark?'☀':'🌙';
+  btn.title=dark?'Switch to light mode':'Switch to dark mode';
+}
+function toggleTheme(){
+  const dark=!isDarkTheme();
+  if(dark) document.documentElement.setAttribute('data-theme','dark');
+  else document.documentElement.removeAttribute('data-theme');
+  try{ localStorage.setItem('hk_theme', dark?'dark':'light'); }catch(e){}
+  updateThemeToggleBtn();
+  if(typeof Chart!=='undefined'){ Chart.defaults.color=axisTextColor(); Chart.defaults.borderColor=gridColor(); }
+  ALL_CHARTS.forEach(applyChartTheme);
+  if(typeof renderPos==='function' && typeof activePosTab!=='undefined') renderPos(activePosTab);
+  if(typeof _currentProfilePlayer!=='undefined' && _currentProfilePlayer) drawPizza('pizzaSvg',_currentProfilePlayer);
+}
+updateThemeToggleBtn();
 
 // ── Force default active tab (Recommendations) after all init ─────────────
 (function(){
