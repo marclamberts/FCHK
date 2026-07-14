@@ -360,7 +360,7 @@ table.dataTable tbody tr{cursor:pointer}
           <table class="xl-table" id="summaryTable">
             <thead><tr>
               <th>#</th><th>Player</th><th>Pos</th><th>Team</th><th>League</th>
-              <th>Age</th><th>Contract</th><th>Mkt Val</th><th>SQS</th><th>Lamberts LI</th><th>vs HK</th><th>Tier</th>
+              <th>Age</th><th>Contract</th><th>Mkt Val</th><th>SQS</th><th>Lamberts LI</th><th>vs HK</th><th>Tier</th><th>Uncertainty</th>
             </tr></thead>
             <tbody id="summaryBody"></tbody>
           </table>
@@ -790,7 +790,7 @@ table.dataTable tbody tr{cursor:pointer}
         <div class="section-hdr"><h3 id="pos-table-title">Top Candidates</h3></div>
         <div class="section-body no-pad">
           <table class="xl-table" id="posTable">
-            <thead><tr><th>#</th><th>Player</th><th>Team</th><th>Lg</th><th>Age</th><th>Mkt Val</th><th>SQS</th><th>BI</th><th>vs HK</th><th>Status</th><th>Tier</th></tr></thead>
+            <thead><tr><th>#</th><th>Player</th><th>Team</th><th>Lg</th><th>Age</th><th>Mkt Val</th><th>SQS</th><th>BI</th><th>vs HK</th><th>Status</th><th>Tier</th><th>Uncertainty</th></tr></thead>
             <tbody id="posTableBody"></tbody>
           </table>
         </div>
@@ -956,7 +956,7 @@ table.dataTable tbody tr{cursor:pointer}
             <th>#</th><th>Player</th><th>Pos</th><th>Team</th><th>League</th><th>Age</th>
             <th>SQS</th><th>Wyscout Tier</th>
             <th>Imp Off %</th><th>Imp Def %</th><th>Imp Total %</th>
-            <th>Signal</th><th>LI</th><th>Mkt Val</th>
+            <th>Signal</th><th>LI</th><th>Mkt Val</th><th>Uncertainty</th>
           </tr></thead>
           <tbody id="impBody"></tbody>
         </table>
@@ -1428,7 +1428,8 @@ function renderImpect(){
       <td>${pbar(p.imp_o_pct)}</td><td>${pbar(p.imp_d_pct)}</td><td>${pbar(p.imp_t_pct)}</td>
       <td>${sig}</td>
       <td style="font-weight:700;color:${liCol}">${p.bi}</td>
-      <td>${mv}</td></tr>`;
+      <td>${mv}</td>
+      <td>${uncBadge(p)}</td></tr>`;
   });
 
   document.getElementById('impBody').innerHTML = html_rows.join('');
@@ -1521,6 +1522,7 @@ document.getElementById("summaryBody").innerHTML=top15.map((d,i)=>`<tr>
   <td class="${d.bi>=20?"cell-green":d.bi>=10?"cell-blue":""}"><strong>${fli(d.bi)}</strong></td>
   <td class="${d.gap>0?"cell-green":"cell-red"}">${fli(d.gap)}</td>
   <td>${tierCell(d.tier)}</td>
+  <td>${uncBadge(d)}</td>
 </tr>`).join("");
 
 // Budget viz
@@ -1578,7 +1580,8 @@ const sumScatter=new Chart(document.getElementById("sumScatter").getContext("2d"
       const d=sumScatter.data.datasets[els[0].datasetIndex].data[els[0].index]._d;
       showTT(`<h4>${d.name}</h4><div class="tt-r"><span class="tt-l">Team</span><span class="tt-v">${d.team}</span></div>
         <div class="tt-r"><span class="tt-l">SQS/BI</span><span class="tt-v">${d.sqs}/${fli(d.bi)}</span></div>
-        <div class="tt-r"><span class="tt-l">Value</span><span class="tt-v">${fmv(d.mv)}</span></div>`,e.native);
+        <div class="tt-r"><span class="tt-l">Value</span><span class="tt-v">${fmv(d.mv)}</span></div>
+        <div class="tt-r"><span class="tt-l">Uncertainty</span><span class="tt-v">${UNC_LABEL[d._unc.tier]} (${d._unc.score})</span></div>`,e.native);
     }
   }
 });
@@ -1619,7 +1622,8 @@ const vmScatter=new Chart(document.getElementById("vmScatter").getContext("2d"),
       const d=vmScatter.data.datasets[els[0].datasetIndex].data[els[0].index]._d;
       showTT(`<h4>${d.name}</h4><div class="tt-r"><span class="tt-l">SQS/BI</span><span class="tt-v">${d.sqs}/${fli(d.bi)}</span></div>
         <div class="tt-r"><span class="tt-l">Value</span><span class="tt-v">${fmv(d.mv)}</span></div>
-        <div class="tt-r"><span class="tt-l">Status</span><span class="tt-v">${d.upgrade}</span></div>`,e.native);
+        <div class="tt-r"><span class="tt-l">Status</span><span class="tt-v">${d.upgrade}</span></div>
+        <div class="tt-r"><span class="tt-l">Uncertainty</span><span class="tt-v">${UNC_LABEL[d._unc.tier]} (${d._unc.score})</span></div>`,e.native);
     }
   }
 });
@@ -2012,6 +2016,7 @@ function renderPos(pos){
     <td class="${d.bi>=20?"cell-green":d.bi>=10?"cell-blue":""}"><strong>${fli(d.bi)}</strong></td>
     <td class="${d.gap>0?"cell-green":"cell-red"}">${fli(d.gap)}</td>
     <td>${upgCell(d.upgrade)}</td><td>${tierCell(d.tier)}</td>
+    <td>${uncBadge(d)}</td>
   </tr>`).join("");
 
   posCharts.posBar=new Chart(document.getElementById("posBar").getContext("2d"),{
@@ -2295,6 +2300,7 @@ function buildExec(){
           <span class="exec-badge" style="background:#F5F3FF;color:#6D28D9">Imp ${p.imp_t_pct}</span>
           <span class="exec-badge" style="background:${p._conv>=75?'#D1FAE5':p._conv>=60?'#DBEAFE':'#FEF3C7'};color:${p._conv>=75?'#065F46':p._conv>=60?'#1E40AF':'#92400E'}">⭐ ${p._conv}</span>
           <span class="exec-badge" style="background:#F3F4F6;color:var(--grey)">${PLAB[pri(p)]}</span>
+          ${uncBadge(p)}
           <button class="wb-btn" onclick="addToCompare('${p.name.replace(/'/g,"\\'")}','${p.team.replace(/'/g,"\\'")}')">⚖ Compare</button>
           <button class="wb-btn" onclick="openNotes('${p.name.replace(/'/g,"\\'")}','${p.team.replace(/'/g,"\\'")}')">📝 Notes</button>
         </div>
