@@ -91,7 +91,7 @@ body{font-family:'Inter',sans-serif;background:var(--page-bg);color:var(--text);
               justify-content:center;font-size:13px}
 
 /* ── SHEET AREA ── */
-.sheet-area{flex:1;overflow-y:auto;background:var(--page-bg);padding:16px 20px 8px}
+.sheet-area{flex:1;overflow-y:auto;background:var(--page-bg);padding:22px clamp(20px,3vw,40px) 12px}
 
 /* ── BOTTOM TAB BAR ── */
 .tab-bar{background:var(--surface-2);border-top:1px solid var(--grey-border);display:flex;
@@ -111,12 +111,17 @@ body{font-family:'Inter',sans-serif;background:var(--page-bg);color:var(--text);
 @keyframes panelIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
 
 /* ── DOCUMENT TITLE BLOCK ── */
-.doc-title{background:var(--surface);border:1px solid var(--grey-border);border-radius:var(--r-md);
-           box-shadow:var(--shadow-sm);
-           padding:14px 20px;margin-bottom:14px;display:flex;align-items:flex-start;justify-content:space-between}
-.doc-title h2{font-size:17px;font-weight:900;color:var(--heading);letter-spacing:-.4px}
-.doc-title .doc-sub{font-size:11.5px;color:var(--text-mute);margin-top:3px}
-.doc-title .doc-tags{display:flex;gap:6px;margin-top:7px;flex-wrap:wrap}
+.doc-title{background:var(--surface);border:1px solid var(--grey-border);border-radius:var(--r-lg);
+           box-shadow:var(--shadow-sm);position:relative;overflow:hidden;
+           padding:22px 28px;margin-bottom:18px;display:flex;align-items:flex-start;justify-content:space-between}
+.doc-title::before{content:"";position:absolute;top:-60%;right:-8%;width:260px;height:260px;border-radius:50%;
+           background:radial-gradient(circle,rgba(26,86,219,.14),rgba(26,86,219,0) 70%);pointer-events:none}
+.doc-title>*{position:relative}
+.doc-title h2{font-size:19.5px;font-weight:900;letter-spacing:-.5px;
+           background:linear-gradient(100deg,var(--heading) 20%,var(--blue-mid) 100%);
+           -webkit-background-clip:text;background-clip:text;color:transparent}
+.doc-title .doc-sub{font-size:11.5px;color:var(--text-mute);margin-top:4px}
+.doc-title .doc-tags{display:flex;gap:6px;margin-top:9px;flex-wrap:wrap}
 .doc-tag{padding:2px 10px;border-radius:20px;font-size:9.5px;font-weight:700;border:1px solid}
 .doc-meta{text-align:right;font-size:10.5px;color:var(--text-mute);line-height:1.7}
 .doc-meta strong{color:var(--text);font-weight:700}
@@ -134,12 +139,16 @@ body{font-family:'Inter',sans-serif;background:var(--page-bg);color:var(--text);
 /* ── FINDING CARDS ── */
 .findings{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px}
 .finding{border-radius:var(--r-sm);padding:12px 14px;border-left:3px solid;box-shadow:var(--shadow-xs);
-         transition:transform .2s var(--ease),box-shadow .2s var(--ease)}
-.finding:hover{transform:translateY(-2px);box-shadow:var(--shadow-md)}
+         transition:transform .2s var(--ease),box-shadow .2s var(--ease);cursor:default}
+.finding:hover{transform:translateY(-3px)}
 .finding.blue{background:#EFF6FF;border-color:var(--blue)}
+.finding.blue:hover{box-shadow:var(--shadow-md),0 8px 20px -6px rgba(26,86,219,.45)}
 .finding.green{background:var(--green-light);border-color:var(--green-mid)}
+.finding.green:hover{box-shadow:var(--shadow-md),0 8px 20px -6px rgba(30,132,73,.4)}
 .finding.amber{background:var(--amber-light);border-color:var(--amber-mid)}
+.finding.amber:hover{box-shadow:var(--shadow-md),0 8px 20px -6px rgba(212,112,10,.4)}
 .finding.red{background:var(--red-light);border-color:var(--red-mid)}
+.finding.red:hover{box-shadow:var(--shadow-md),0 8px 20px -6px rgba(192,57,43,.4)}
 .finding .f-num{font-size:23px;font-weight:900;line-height:1;letter-spacing:-.6px}
 .finding.blue .f-num{color:var(--blue)} .finding.green .f-num{color:var(--green-mid)}
 .finding.amber .f-num{color:var(--amber-mid)} .finding.red .f-num{color:var(--red-mid)}
@@ -351,6 +360,42 @@ table.dataTable tbody tr{cursor:pointer}
              font-size:19px;cursor:pointer;color:var(--text-mute);transition:.15s var(--ease)}
 .modal-close:hover{color:var(--neg-text);transform:rotate(90deg)}
 
+/* ── COMMAND PALETTE ── */
+kbd{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.22);border-radius:5px;
+    padding:1px 5px;font-size:9.5px;font-family:inherit;font-weight:700;line-height:1.5}
+.cmdk-trigger{display:flex;align-items:center;gap:6px;color:rgba(255,255,255,.75)}
+.cmdk-trigger-label{font-size:10.5px}
+@media (max-width:900px){.cmdk-trigger-label{display:none}}
+.cmdk-overlay{position:fixed;inset:0;background:rgba(8,12,20,.55);backdrop-filter:blur(3px);
+             z-index:1200;display:flex;align-items:flex-start;justify-content:center;
+             padding-top:12vh;animation:fadeIn .15s var(--ease)}
+.cmdk-box{width:min(600px,92vw);background:var(--surface);border:1px solid var(--grey-border);
+          border-radius:var(--r-lg);box-shadow:var(--shadow-lg);overflow:hidden;
+          animation:modalIn .18s var(--ease-out)}
+.cmdk-input-row{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--border-soft)}
+.cmdk-icon{font-size:15px;opacity:.6}
+.cmdk-input{flex:1;border:none;outline:none;background:transparent;font-size:15px;
+            font-family:inherit;color:var(--text)}
+.cmdk-input::placeholder{color:var(--text-mute)}
+.cmdk-esc{color:var(--text-mute);background:var(--surface-2);border-color:var(--grey-border)}
+.cmdk-results{max-height:52vh;overflow-y:auto;padding:6px}
+.cmdk-empty{padding:28px 18px;text-align:center;color:var(--text-mute);font-size:12px}
+.cmdk-group-lbl{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;
+                color:var(--text-mute);padding:8px 10px 4px}
+.cmdk-row{display:flex;align-items:center;gap:11px;padding:9px 10px;border-radius:9px;
+          cursor:pointer;transition:background .1s var(--ease)}
+.cmdk-row:hover,.cmdk-row.sel{background:var(--surface-hover)}
+.cmdk-row-icon{width:26px;height:26px;border-radius:7px;background:var(--surface-2);
+               display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0}
+.cmdk-row-main{flex:1;min-width:0}
+.cmdk-row-title{font-size:12.5px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cmdk-row-sub{font-size:10px;color:var(--text-mute);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cmdk-row-tag{font-size:9.5px;font-weight:700;color:var(--blue);flex-shrink:0}
+.cmdk-footer{display:flex;gap:14px;align-items:center;padding:9px 16px;border-top:1px solid var(--border-soft);
+            font-size:10px;color:var(--text-mute)}
+.cmdk-footer kbd{background:var(--surface-2);border-color:var(--grey-border);color:var(--text-mute)}
+.cmdk-footer .cmdk-brand{margin-left:auto;opacity:.6}
+
 /* ── COMPARE ── */
 .compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;min-width:800px}
 .cmp-header{text-align:center;font-weight:800;font-size:12.5px;color:var(--heading);margin-bottom:8px}
@@ -408,6 +453,9 @@ table.dataTable tbody tr{cursor:pointer}
     <span>📊 1,085 candidates</span>
   </div>
   <div class="wb-actions">
+    <button class="wb-btn cmdk-trigger" onclick="openCmdK()" title="Search everything">
+      <span>🔍</span><span class="cmdk-trigger-label">Search</span><kbd>⌘K</kbd>
+    </button>
     <button class="wb-btn theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle dark mode">🌙</button>
     <button class="wb-btn" onclick="window.print()">🖨 Print</button>
     <button class="wb-btn" onclick="exportCSV()">⬇ Export CSV</button>
@@ -1280,6 +1328,23 @@ table.dataTable tbody tr{cursor:pointer}
   </div>
 </div>
 
+<!-- COMMAND PALETTE -->
+<div id="cmdkOverlay" class="cmdk-overlay" style="display:none" onclick="if(event.target===this)closeCmdK()">
+  <div class="cmdk-box">
+    <div class="cmdk-input-row">
+      <span class="cmdk-icon">🔍</span>
+      <input type="text" id="cmdkInput" class="cmdk-input" placeholder="Search players, teams, or jump to a sheet…" autocomplete="off">
+      <kbd class="cmdk-esc">esc</kbd>
+    </div>
+    <div id="cmdkResults" class="cmdk-results"></div>
+    <div class="cmdk-footer">
+      <span><kbd>↑</kbd><kbd>↓</kbd> navigate</span>
+      <span><kbd>↵</kbd> select</span>
+      <span class="cmdk-brand">Waltzing Analytics</span>
+    </div>
+  </div>
+</div>
+
 <!-- BOTTOM TAB BAR -->
 <div class="tab-bar">
   <div class="sheet-tab active" data-sheet="recs"><span style="font-size:12px">★</span> Recommendations</div>
@@ -1414,6 +1479,28 @@ function upgCell(u){
 function pbar(pct,col){
   return `<div class="pbar-wrap"><div class="pbar-track"><div class="pbar-fill" style="width:${pct}%;background:${col}"></div></div><span class="pbar-val" style="color:${col}">${Math.round(pct)}</span></div>`;
 }
+function normSearch(str){
+  return (str||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+}
+function animateFindingNums(containerId){
+  const el=document.getElementById(containerId);
+  if(!el) return;
+  el.querySelectorAll('.f-num').forEach(node=>{
+    const raw=node.textContent.trim();
+    const m=raw.match(/^-?\d+(\.\d+)?/);
+    if(!m) return;
+    const target=parseFloat(m[0]);
+    const decimals=(m[0].split('.')[1]||'').length;
+    const suffix=raw.slice(m[0].length);
+    const start=performance.now(),dur=600;
+    (function tick(now){
+      const t=Math.min(1,(now-start)/dur);
+      const eased=1-Math.pow(1-t,3);
+      node.textContent=(target*eased).toFixed(decimals)+suffix;
+      if(t<1) requestAnimationFrame(tick); else node.textContent=raw;
+    })(start);
+  });
+}
 function nameCell(d){
   const pn=d.name.replace(/'/g,"\\'"), pt=d.team.replace(/'/g,"\\'");
   return `<strong style="cursor:pointer" onmouseover="this.style.color='var(--blue)'" onmouseout="this.style.color=''" onclick="event.stopPropagation();goToProfile('${pn}','${pt}')">${d.name}</strong>${notes[starKey(d)]?'<span class="note-badge"></span>':''}<small style="display:block;color:#9CA3AF;font-size:10px">${d.position}</small>`;
@@ -1516,6 +1603,7 @@ function renderRecs(){
     <div class="finding amber"><div class="f-num">${pw.length}</div><div class="f-lbl">Watch List</div><div class="f-desc">Impect confirmed · scout to verify</div></div>
     <div class="finding red"><div class="f-num">${top_conv}</div><div class="f-lbl">Top Conviction</div><div class="f-desc">${rows.length?rows[0].name+' ('+rows[0].pos+')':'—'}</div></div>
   `;
+  animateFindingNums('rec-findings');
   document.getElementById('rec-meta').innerHTML = '<strong>Total recs:</strong> '+rows.length;
 }
 
@@ -1587,6 +1675,7 @@ function renderImpect(){
     <div class="finding amber"><div class="f-num">${gems}</div><div class="f-lbl">Impect Gems</div><div class="f-desc">Impect strong, SQS underrates — worth investigating</div></div>
     <div class="finding red"><div class="f-num">${DATA.filter(p=>p.sqs>=60&&p.imp_t_pct>=0&&p.imp_t_pct<40).length}</div><div class="f-lbl">Wyscout-Only</div><div class="f-desc">High SQS but Impect below 40th — treat with caution</div></div>
   `;
+  animateFindingNums('impect-findings');
   document.getElementById('imp-match-count').innerHTML = '<strong>Match rate:</strong> '+pct_match+'%';
 }
 
@@ -1649,6 +1738,7 @@ document.getElementById("summary-findings").innerHTML=`
     <div class="f-lbl">Expiring 2026 ✦</div>
     <div class="f-desc">Contract expiring this summer — potential cut-price or free acquisitions</div>
   </div>`;
+animateFindingNums('summary-findings');
 
 // Summary table (top 15 clear upgrade + elite)
 const top15=DATA.filter(d=>d.upgrade==="CLEAR UPGRADE").sort((a,b)=>b.bi-a.bi).slice(0,15);
@@ -2074,6 +2164,120 @@ function goToProfile(name, team){
   renderProfile(p);
   document.querySelector('.sheet-area').scrollTop = 0;
 }
+function goToSheet(sheetId){
+  const tab=document.querySelector('.sheet-tab[data-sheet="'+sheetId+'"]');
+  if(tab) tab.click();
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// COMMAND PALETTE (⌘K / Ctrl+K / "/") — instant search across every player,
+// team and sheet in the workbook.
+// ══════════════════════════════════════════════════════════════════════════
+const CMDK_SHEETS=[
+  {id:'recs',icon:'★',label:'Recommendations',sub:'Priority 1/2 + Watch list'},
+  {id:'summary',icon:'📋',label:'Lamberts Model',sub:'Summary & opportunity map'},
+  {id:'impect',icon:'⚡',label:'Impect',sub:'Dual-signal validation'},
+  {id:'valuemap',icon:'🗺',label:'Value Map',sub:'SQS / Impect vs market value'},
+  {id:'upgrades',icon:'▲',label:'Clear Upgrades',sub:'Confirmed upgrades on current XI'},
+  {id:'all',icon:'📊',label:'All Targets',sub:'Full 1,085-candidate database'},
+  {id:'profile',icon:'🔍',label:'Player Profile',sub:'Individual scouting report'},
+  {id:'position',icon:'📍',label:'By Position',sub:'Position-by-position deep dive'},
+  {id:'squad',icon:'👥',label:'Squad Baseline',sub:'Current Hradec squad quality'},
+  {id:'exec',icon:'📄',label:'Exec Summary',sub:'Board-ready top 5 per position'},
+  {id:'shortlist',icon:'⭐',label:'Shortlist',sub:'Your starred players'},
+  {id:'jamestown',icon:'🎯',label:'Waltzing Analytics',sub:'About the methodology'},
+  {id:'methodology',icon:'📐',label:'Methodology',sub:'SQS, Lamberts Index, uncertainty'},
+];
+let _cmdkSel=0, _cmdkItems=[];
+
+function openCmdK(){
+  const ov=document.getElementById('cmdkOverlay');
+  ov.style.display='flex';
+  const inp=document.getElementById('cmdkInput');
+  inp.value='';
+  renderCmdK('');
+  setTimeout(()=>inp.focus(),10);
+}
+function closeCmdK(){
+  document.getElementById('cmdkOverlay').style.display='none';
+}
+function cmdkRowHtml(item,i){
+  const sel=i===_cmdkSel?' sel':'';
+  if(item.kind==='sheet'){
+    return `<div class="cmdk-row${sel}" data-i="${i}" onclick="cmdkActivate(${i})">
+      <div class="cmdk-row-icon">${item.icon}</div>
+      <div class="cmdk-row-main"><div class="cmdk-row-title">${item.label}</div><div class="cmdk-row-sub">${item.sub}</div></div>
+      <div class="cmdk-row-tag">Go to sheet →</div>
+    </div>`;
+  }
+  const d=item.data;
+  return `<div class="cmdk-row${sel}" data-i="${i}" onclick="cmdkActivate(${i})">
+    <div class="cmdk-row-icon"><span class="pos-badge pos-${d.pos}" style="font-size:8.5px">${d.pos}</span></div>
+    <div class="cmdk-row-main"><div class="cmdk-row-title">${d.name}</div><div class="cmdk-row-sub">${d.team} · ${d.league} · Age ${d.age}</div></div>
+    <div class="cmdk-row-tag">${uncBadge(d)}</div>
+  </div>`;
+}
+function renderCmdK(qRaw){
+  const q=normSearch(qRaw.trim());
+  _cmdkItems=[];
+  const box=document.getElementById('cmdkResults');
+  if(!q){
+    _cmdkItems=CMDK_SHEETS.map(s=>({kind:'sheet',...s}));
+    box.innerHTML='<div class="cmdk-group-lbl">Jump to sheet</div>'+_cmdkItems.map(cmdkRowHtml).join('');
+    _cmdkSel=0; cmdkHighlight();
+    return;
+  }
+  const sheetHits=CMDK_SHEETS.filter(s=>normSearch(s.label).includes(q)).map(s=>({kind:'sheet',...s}));
+  const playerHits=DATA.filter(d=>normSearch(d.name).includes(q)||normSearch(d.team).includes(q))
+    .sort((a,b)=>{
+      const an=normSearch(a.name).startsWith(q)?0:1, bn=normSearch(b.name).startsWith(q)?0:1;
+      if(an!==bn) return an-bn;
+      return b.bi-a.bi;
+    })
+    .slice(0,20).map(d=>({kind:'player',data:d}));
+  _cmdkItems=[...sheetHits,...playerHits];
+  if(!_cmdkItems.length){
+    box.innerHTML='<div class="cmdk-empty">No matches for "'+qRaw.replace(/</g,"&lt;")+'"</div>';
+    return;
+  }
+  let html='';
+  if(sheetHits.length) html+='<div class="cmdk-group-lbl">Sheets</div>'+sheetHits.map((it,i)=>cmdkRowHtml(it,i)).join('');
+  if(playerHits.length) html+='<div class="cmdk-group-lbl">Players</div>'+playerHits.map((it,i)=>cmdkRowHtml(it,i+sheetHits.length)).join('');
+  box.innerHTML=html;
+  _cmdkSel=0; cmdkHighlight();
+}
+function cmdkHighlight(){
+  document.querySelectorAll('.cmdk-row').forEach((el,i)=>el.classList.toggle('sel',i===_cmdkSel));
+  const sel=document.querySelector('.cmdk-row.sel');
+  if(sel) sel.scrollIntoView({block:'nearest'});
+}
+function cmdkActivate(i){
+  const item=_cmdkItems[i];
+  if(!item) return;
+  closeCmdK();
+  if(item.kind==='sheet') goToSheet(item.id);
+  else goToProfile(item.data.name,item.data.team);
+}
+document.addEventListener('keydown',(e)=>{
+  const overlay=document.getElementById('cmdkOverlay');
+  const isOpen=overlay && overlay.style.display!=='none';
+  if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){
+    e.preventDefault();
+    isOpen?closeCmdK():openCmdK();
+    return;
+  }
+  if(!isOpen && e.key==='/'){
+    const tag=(document.activeElement&&document.activeElement.tagName)||'';
+    if(tag!=='INPUT'&&tag!=='TEXTAREA'){ e.preventDefault(); openCmdK(); }
+    return;
+  }
+  if(!isOpen) return;
+  if(e.key==='Escape'){ closeCmdK(); return; }
+  if(e.key==='ArrowDown'){ e.preventDefault(); _cmdkSel=Math.min(_cmdkItems.length-1,_cmdkSel+1); cmdkHighlight(); }
+  if(e.key==='ArrowUp'){ e.preventDefault(); _cmdkSel=Math.max(0,_cmdkSel-1); cmdkHighlight(); }
+  if(e.key==='Enter'){ e.preventDefault(); cmdkActivate(_cmdkSel); }
+});
+document.getElementById('cmdkInput').addEventListener('input',function(){ renderCmdK(this.value); });
 
 function renderProfile(d){
   document.getElementById("profile-empty").style.display="none";
@@ -2138,9 +2342,9 @@ function renderProfile(d){
 function setupAC(inputId,acId,onSel){
   const inp=document.getElementById(inputId),ac=document.getElementById(acId);
   inp.addEventListener("input",function(){
-    const q=this.value.toLowerCase().trim();ac.innerHTML="";
+    const q=normSearch(this.value.trim());ac.innerHTML="";
     if(q.length<2){ac.style.display="none";return;}
-    const hits=DATA.filter(d=>d.name.toLowerCase().includes(q)).slice(0,12);
+    const hits=DATA.filter(d=>normSearch(d.name).includes(q)).slice(0,12);
     if(!hits.length){ac.style.display="none";return;}
     hits.forEach(d=>{const item=document.createElement("div");item.className="ac-item";
       item.innerHTML=`<div class="ac-name">${d.name}</div><div class="ac-meta">${d.pos}·${d.team}·${d.league}·BI ${fli(d.bi)}·${fmv(d.mv)}</div>`;
